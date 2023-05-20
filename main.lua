@@ -3,17 +3,24 @@ local LK = love.keyboard
 local LG = love.graphics
 local LQ = love.graphics.newQuad
 
+-- Variaveis para tratar colisão do mapa e personagem
 local gameMap;
 local wf;
 local wall;
-
 local walls = {}
 local player = {}
 
 function  love.load()
+
+    -- Adiciona minha biblioteca de colisão
     wf = require 'libraries/windfield'
     world = wf.newWorld(0, 9.81 * 2000, true)
 
+    -- Adiciona minha biblioteca de camera
+    camera = require 'libraries/camera'
+    cam = camera()
+
+    -- Adiciona minha biblioteca de inserção de mapa
     local sti = require 'libraries/sti'
     gameMap = sti('maps/woods.lua')
 
@@ -34,18 +41,25 @@ function  love.load()
 end
 
 function  love.draw()
-    gameMap:draw()
 
-    LG.draw(
-        player.spriteSheet,
-        player.x,
-        player.y,
-        0,
-        1,
-        1,
-        player.spriteSheet:getWidth() / 2,
-        player.spriteSheet:getHeight() / 2
-    )
+    cam:attach()
+        gameMap:drawLayer(gameMap.layers["Background3"])
+        gameMap:drawLayer(gameMap.layers["Background2"])
+        gameMap:drawLayer(gameMap.layers["Background1"])
+        gameMap:drawLayer(gameMap.layers["Caverna"])
+        gameMap:drawLayer(gameMap.layers["Camada de Blocos 1"])
+
+        LG.draw(
+            player.spriteSheet,
+            player.x,
+            player.y,
+            0,
+            1,
+            1,
+            player.spriteSheet:getWidth() / 2,
+            player.spriteSheet:getHeight() / 2
+        )
+    cam:detach()
 
     -- Visualizar area de contato
     --world:draw()
@@ -66,15 +80,42 @@ function love.update(dt)
     end
 
     if LK.isDown('up') or LK.isDown('w') then
-        if player.y > 500 then
-            vy = player.speed * -5
-        end
+        vy = player.speed * -5
     end
 
+    cam:lookAt(player.x, player.y - 200)
+
+    local w = LG.getWidth()
+    local h = LG.getHeight()
+   
+    -- Esconde fundo preto Left
+    if cam.x < w/2 then
+        cam.x = w/2
+    end
+
+    -- Esconde fundo preto (Top)
+    if cam.y < h/2 then
+        cam.y = h/2
+    end
+
+    --[[local mapW = gameMap.width * gameMap.tilewidth
+    local mapH = gameMap.height * gameMap.tileheight
+
+    Esconde fundo preto (Right)
+    if cam.x < (mapW - w/2) then
+        cam.x = (mapW - w/2)
+    end
+
+    Esconde fundo preto (Bottom)
+    if cam.y < (mapH/2) then
+        cam.y = (mapH/2)
+    end]]
+
+   
     player.collider:setLinearVelocity(vx, vy)
 
     world:update(dt)
     player.x = player.collider:getX()
-    player.y = player.collider:getY() 
+    player.y = player.collider:getY()
 end
 
