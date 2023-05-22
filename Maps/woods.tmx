@@ -7,13 +7,13 @@
   <image source="../Insumos/Tileset/tileset_1.png" width="4096" height="2048"/>
  </tileset>
  <tileset firstgid="2049" name="background1" tilewidth="64" tileheight="64" tilecount="990" columns="55">
-  <image source="../Insumos/Beckgrounds/Forest_Background/bg_forest_1.png" width="3575" height="1182"/>
+  <image source="../Insumos/Background/Forest_Background/bg_forest_1.png" width="3575" height="1182"/>
  </tileset>
  <tileset firstgid="3039" name="background2" tilewidth="64" tileheight="64" tilecount="990" columns="55">
-  <image source="../Insumos/Beckgrounds/Forest_Background/bg_forest_2.png" width="3575" height="1182"/>
+  <image source="../Insumos/Background/Forest_Background/bg_forest_2.png" width="3575" height="1182"/>
  </tileset>
  <tileset firstgid="4029" name="background3" tilewidth="64" tileheight="64" tilecount="990" columns="55">
-  <image source="../Insumos/Beckgrounds/Forest_Background/bg_forest_5.png" width="3575" height="1182"/>
+  <image source="../Insumos/Background/Forest_Background/bg_forest_5.png" width="3575" height="1182"/>
  </tileset>
  <tileset firstgid="5019" name="cabana" tilewidth="64" tileheight="64" tilecount="91" columns="13">
   <image source="../Insumos/Buildings/house_1.png" width="836" height="450"/>

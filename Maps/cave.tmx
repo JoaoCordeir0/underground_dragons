@@ -4,13 +4,13 @@
   <export target="cave.lua" format="lua"/>
  </editorsettings>
  <tileset firstgid="1" name="BACK" tilewidth="64" tileheight="64" tilecount="720" columns="45">
-  <image source="../Insumos/Beckgrounds/Cave_Background/bg_cave_1.png" width="2938" height="1071"/>
+  <image source="../Insumos/Background/Cave_Background/bg_cave_1.png" width="2938" height="1071"/>
  </tileset>
  <tileset firstgid="721" name="BACK" tilewidth="64" tileheight="64" tilecount="720" columns="45">
-  <image source="../Insumos/Beckgrounds/Cave_Background/bg_cave_2.png" width="2938" height="1071"/>
+  <image source="../Insumos/Background/Cave_Background/bg_cave_2.png" width="2938" height="1071"/>
  </tileset>
  <tileset firstgid="1441" name="BACK" tilewidth="64" tileheight="64" tilecount="720" columns="45">
-  <image source="../Insumos/Beckgrounds/Cave_Background/bg_cave_4.png" width="2938" height="1071"/>
+  <image source="../Insumos/Background/Cave_Background/bg_cave_4.png" width="2938" height="1071"/>
  </tileset>
  <tileset firstgid="2161" name="Caverna" tilewidth="64" tileheight="64" tilecount="2048" columns="64">
   <image source="../Insumos/Tileset/tileset_2.png" width="4096" height="2048"/>

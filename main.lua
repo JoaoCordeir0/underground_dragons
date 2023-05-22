@@ -47,14 +47,14 @@ function love.load()
     -- Assim criar a fase selecionada
     if fase == 1 then
         gameMap = sti('maps/woods.lua')
-    else if fase == 2 then
-            gameMap = sti('maps/cave.lua')
-        end
     end
+    if fase == 2 then
+        gameMap = sti('maps/cave.lua')
+    end    
 
     -- Carrega o Personagem
     player.spriteSheetRun = {} -- Tabela de animacao do personagem andando
-    player.spriteSheetIdle= {} -- Tabela de animacao do personagem parado
+    player.spriteSheetIdle = {} -- Tabela de animacao do personagem parado
     player.spriteSheetJump = {} -- Tabela de animacao do personagem pulando
     player.x = 100
     player.y = 575
@@ -94,7 +94,7 @@ function love.load()
     currentSpriteJump = 1
     -- Carrega o Personagem
 
-    CarregarMapa()
+    RenderMap()
 end
 
 function love.draw()
@@ -109,7 +109,7 @@ function love.draw()
             gameMap:drawLayer(gameMap.layers["Background1"])
             gameMap:drawLayer(gameMap.layers["Caverna"])
             gameMap:drawLayer(gameMap.layers["Camada de Blocos 1"])
-        elseif fase == 2 then
+        elseif fase == 2 then           
             gameMap:drawLayer(gameMap.layers["Camada de Blocos 3"])
             gameMap:drawLayer(gameMap.layers["Camada de Blocos 2"])
             gameMap:drawLayer(gameMap.layers["Camada de Blocos 1"])
@@ -117,21 +117,8 @@ function love.draw()
             gameMap:drawLayer(gameMap.layers["Camada de Blocos 5"])
         end
 
-        -- Carrega graficamente o personagem
-        -- Animação de parado
-        LG.draw(
-            player.spriteSheetIdle[math.floor(currentSpriteIdle)],
-            player.x,
-            player.y,
-            0,
-            1,
-            1,
-            player.spriteSheetIdle[1]:getWidth() / 2,
-            player.spriteSheetIdle[1]:getHeight() / 2
-        )
-
         -- Executa animação do personagem
-        AnimacaoPersonagem()
+        RenderPlayer()
 
         -- Fiz o teste de morrer, não fiz o teste de colisão
         -- no espinho, até pq o espinho ta sem colisão
@@ -192,19 +179,19 @@ function love.update(dt)
     -- Animação personagem
     -- Animação Corrida
     currentSpriteRun = currentSpriteRun + 10 * dt
-    if currentSpriteRun > 10 then
+    if currentSpriteRun >= 10 then
         currentSpriteRun = 1
     end
 
     -- Animação Parado
     currentSpriteIdle = currentSpriteIdle + 10 * dt
-    if currentSpriteIdle > 8 then
+    if currentSpriteIdle >= 8 then
         currentSpriteIdle = 1
     end
 
     -- Animação Pulo
     currentSpriteJump = currentSpriteJump + 10 * dt
-    if currentSpriteJump > 2 then
+    if currentSpriteJump >= 2 then
         currentSpriteJump = 1
     end
 end
@@ -217,7 +204,7 @@ function love.keypressed(k)
     end
 end
 
-function CarregarMapa()
+function RenderMap()
     -- Função que carrega as colisões do mapa
     if gameMap.layers['Chao'] then
         for i, obj in pairs(gameMap.layers['Chao'].objects) do
@@ -228,9 +215,27 @@ function CarregarMapa()
     end
 end
 
-function AnimacaoPersonagem()
-
-    -- Executa a animação do personagem 
+-- Executa animações do personagem 
+function RenderPlayer()         
+    -- Animação de parado  
+    if not LK.isDown('right') and 
+       not LK.isDown('d') and 
+       not LK.isDown('left') and 
+       not LK.isDown('a') and 
+       not LK.isDown('up') and 
+       not LK.isDown('w') and 
+       not LK.isDown('s') then  
+        LG.draw(
+            player.spriteSheetIdle[math.floor(currentSpriteIdle)],
+            player.x,
+            player.y,
+            0,
+            1,
+            1,
+            player.spriteSheetIdle[1]:getWidth() / 2,
+            player.spriteSheetIdle[1]:getHeight() / 2
+        )
+    end 
 
     -- Animação de correr
     if LK.isDown('right') or LK.isDown('d') or LK.isDown('left') or LK.isDown('a') then
