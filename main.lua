@@ -35,10 +35,13 @@ local currentSpriteIdleBow
 local currentSpriteJumpBow
 local currentSpriteAttackBow
 
+-- Variavel para setar chechpoint de troca de mapa
+local woodsCheckPoint = {}
+
 -- Variavel para controlar arma
 local arco = {}
 
-local arma = 'x'
+local arma = 'hand'
 
 function love.load()
 
@@ -93,8 +96,14 @@ function love.load()
     currentSpriteIdleBow = 1
     currentSpriteJumpBow = 1
 
-    arco.x = 600
-    arco.y = 500
+    -- Posição, tamanho do checkpoint de troca de mapa
+    woodsCheckPoint.x = 3750
+    woodsCheckPoint.y = 500    
+    woodsCheckPoint.size = 200
+
+    -- Posição, tamanho e imagem do arco
+    arco.x = 1530
+    arco.y = 350
     arco.img = LG.newImage('Insumos/Objeto/weapon_bow.png')
     arco.size = 100
                 
@@ -106,7 +115,6 @@ function love.draw()
 
     -- Coloco o foco da camera no meu personagem
     cam:attach()
-
         -- Caso a Fase for igual a 1 carrega os layers/camadas do meu mapa
         if fase == 1 then
             gameMapWoods:drawLayer(gameMapWoods.layers["Background3"])
@@ -128,13 +136,13 @@ function love.draw()
         LG.draw(arco.img, arco.x, arco.y)
     cam:detach()
 
-    -- Renderiza a barra de vida do usuário
-    LG.draw(player.spriteHealthBar[playerLife], 5, 5)
-
-    if player.y > 577 then
-        love.graphics.setNewFont(20)
-        love.graphics.print("Morreu" , 700, 400)        
-    end            
+    -- Renderiza a barra de vida do usuário 
+    LG.draw(player.spriteHealthBar[playerLife], 5, 5)  
+    -- Renderiza a arma que está sendo usada
+    weaponInUse()    
+    
+    LG.print('X -> ' .. player.x, 10, 200)  
+    LG.print('Y -> ' .. player.y, 10, 220)  
 end
 
 function love.update(dt)
@@ -152,7 +160,7 @@ function love.update(dt)
         
     if LK.isDown('up') or LK.isDown('w') then
         vy = player.speed * -5            
-    end
+    end   
     
     -- Foca a camera no personagem passando o X e Y dele
     cam:lookAt(player.x, player.y -200)
@@ -170,6 +178,11 @@ function love.update(dt)
         cam.y = h/2
     end
 
+    -- Identifica queda nos espinhos
+    if player.y > 610 then
+        playerLife = 1        
+    end
+
     player.collider:setLinearVelocity(vx, vy)
 
     world:update(dt)
@@ -178,10 +191,20 @@ function love.update(dt)
 
     -- Percorre as imagens gerando a animação
     RunThroughImages(dt)
+
     -- Colidir com arco e pegar arco
     if HaveColission(player, arco) then
-       arma = 'z'
-       
+       arma = 'arco'       
+    end
+
+    -- Testa colisão da troca de mapas / Fase 1 para Fase 2
+    if HaveColission(player, woodsCheckPoint) then
+        fase = 2
+        player.collider = world:destroy()
+        world = wf.newWorld(0, 9.81 * 4000, true)
+        player.collider = world:newBSGRectangleCollider(150, 575, 100, 130, 10)
+        player.collider:setFixedRotation(true)
+        RenderMap()      
     end
 end
 
@@ -196,20 +219,13 @@ function love.keypressed(k)
         player.collider = world:newBSGRectangleCollider(150, 575, 100, 130, 10)
         player.collider:setFixedRotation(true)
         RenderMap()        
-    elseif k == '2' then
-        fase = 2
-        player.collider = world:destroy()
-        world = wf.newWorld(0, 9.81 * 4000, true)
-        player.collider = world:newBSGRectangleCollider(150, 575, 100, 130, 10)
-        player.collider:setFixedRotation(true)
-        RenderMap()
     end
 
     if k == 'x' then
-        arma = 'x'
+        arma = 'hand'
         RenderPlayer()
     elseif k == 'z' then
-        arma = 'z'
+        arma = 'arco'
         RenderPlayer()
     end
 
@@ -247,7 +263,7 @@ end
 -- Renderiza e executa animações do personagem 
 function RenderPlayer()
 
-    if arma == 'x' then
+    if arma == 'hand' then
         if not LK.isDown('right') and 
            not LK.isDown('d') and 
            not LK.isDown('left') and 
@@ -268,16 +284,18 @@ function RenderPlayer()
 
         -- Animação de correr
         if LK.isDown('right') or LK.isDown('d') or LK.isDown('left') or LK.isDown('a') then
-            LG.draw(
-                player.spriteSheetRun[math.floor(currentSpriteRun)],
-                player.x,
-                player.y,
-                0,
-                1,
-                1,
-                player.spriteSheetRun[1]:getWidth() / 2,
-                player.spriteSheetRun[1]:getHeight() / 2
-            )
+            if not LK.isDown('up') and not LK.isDown('w') then
+                LG.draw(
+                    player.spriteSheetRun[math.floor(currentSpriteRun)],
+                    player.x,
+                    player.y,
+                    0,
+                    1,
+                    1,
+                    player.spriteSheetRun[1]:getWidth() / 2,
+                    player.spriteSheetRun[1]:getHeight() / 2
+                )
+            end
         end
 
         -- Animação de Pular
@@ -293,7 +311,7 @@ function RenderPlayer()
                 player.spriteSheetJump[1]:getHeight() / 2
             )
         end
-    elseif arma == 'z' then
+    elseif arma == 'arco' then
         if not LK.isDown('right') and
            not LK.isDown('d') and
            not LK.isDown('left') and
@@ -314,16 +332,18 @@ function RenderPlayer()
 
         -- Animação de correr
         if LK.isDown('right') or LK.isDown('d') or LK.isDown('left') or LK.isDown('a') then
-            LG.draw(
-                player.spriteSheetRunBow[math.floor(currentSpriteRunBow)],
-                player.x,
-                player.y,
-                0,
-                1,
-                1,
-                player.spriteSheetRunBow[1]:getWidth() / 2,
-                player.spriteSheetRunBow[1]:getHeight() / 2
-            )
+            if not LK.isDown('up') and not LK.isDown('w') then
+                LG.draw(
+                    player.spriteSheetRunBow[math.floor(currentSpriteRunBow)],
+                    player.x,
+                    player.y,
+                    0,
+                    1,
+                    1,
+                    player.spriteSheetRunBow[1]:getWidth() / 2,
+                    player.spriteSheetRunBow[1]:getHeight() / 2
+                )
+            end
         end
 
         -- Animação de Pular
@@ -448,10 +468,16 @@ function RunThroughImages(dt)
     end
 end
 
-function HaveColission(player, arco)
+function HaveColission(player, item)
     -- Calcular a distância centro a centro(Pitagoras)
-    local distancia = math.sqrt((player.x - arco.x)^2 + (player.y - arco.y)^2)
+    local distancia = math.sqrt((player.x - item.x)^2 + (player.y - item.y)^2)
 
     -- Verificar a colisão 
-    return distancia < (player.size + arco.size) / 2
+    return distancia < (player.size + item.size) / 2
+end
+
+function weaponInUse()
+    if arma == 'arco' then        
+        return LG.draw(LG.newImage('Insumos/Objeto/weapon_bow.png'), 300, 5) 
+    end  
 end
