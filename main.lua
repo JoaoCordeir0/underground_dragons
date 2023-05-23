@@ -33,6 +33,8 @@ local currentSpriteJumpBow
 local currentSpriteAttackBow
 
 -- Variavel para controlar arma
+local arco = {}
+
 local arma = 'x'
 
 function love.load()
@@ -54,7 +56,7 @@ function love.load()
     -- Teste se a Fase é 1 ou 2
     -- Assim criar a fase selecionada    
     gameMapWoods = sti('maps/woods.lua')    
-    gameMapCave = sti('maps/cave.lua')       
+    gameMapCave = sti('maps/cave.lua')     
     
     -- Carrega o Personagem
     -- Personagem sem arma
@@ -69,6 +71,7 @@ function love.load()
     player.x = 100
     player.y = 575
     player.speed = 400
+    player.size = 130
 
     -- Carrea minhas imagens do personagem
     LoadPlayerImages()
@@ -84,7 +87,12 @@ function love.load()
     currentSpriteRunBow = 1
     currentSpriteIdleBow = 1
     currentSpriteJumpBow = 1
-    
+
+    arco.x = 600
+    arco.y = 500
+    arco.img = LG.newImage('Insumos/Objeto/weapon_bow.png')
+    arco.size = 100
+                
     -- Carrega o Mapa
     RenderMap()
 end
@@ -111,6 +119,8 @@ function love.draw()
 
         -- Executa animação do personagem
         RenderPlayer()
+
+        LG.draw(arco.img, arco.x, arco.y)
     cam:detach()
 
      -- Fiz o teste de morrer, não fiz o teste de colisão
@@ -130,6 +140,8 @@ function love.draw()
     else
         love.graphics.print("Item: ", 100, 10);
     end
+
+    
 end
 
 function love.update(dt)
@@ -177,6 +189,11 @@ function love.update(dt)
 
     -- Percorre as imagens gerando a animação
     RunThroughImages(dt)
+    -- Colidir com arco e pegar arco
+    if HaveColission(player, arco) then
+       arma = 'z'
+       
+    end
 end
 
 function love.keypressed(k)
@@ -335,56 +352,56 @@ function LoadPlayerImages()
 
     -- Aqui vou criar as tabelas das animações diferentes
     -- Animação de Correr
-    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_00.png'))
-    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_01.png'))
-    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_02.png'))
-    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_03.png'))
-    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_04.png'))
-    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_05.png'))
-    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_06.png'))
-    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_07.png'))
-    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_08.png'))
-    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_09.png'))
+    table.insert(player.spriteSheetRun, LG.newImage('Insumos/Player/run/player_run_00.png'))
+    table.insert(player.spriteSheetRun, LG.newImage('Insumos/Player/run/player_run_01.png'))
+    table.insert(player.spriteSheetRun, LG.newImage('Insumos/Player/run/player_run_02.png'))
+    table.insert(player.spriteSheetRun, LG.newImage('Insumos/Player/run/player_run_03.png'))
+    table.insert(player.spriteSheetRun, LG.newImage('Insumos/Player/run/player_run_04.png'))
+    table.insert(player.spriteSheetRun, LG.newImage('Insumos/Player/run/player_run_05.png'))
+    table.insert(player.spriteSheetRun, LG.newImage('Insumos/Player/run/player_run_06.png'))
+    table.insert(player.spriteSheetRun, LG.newImage('Insumos/Player/run/player_run_07.png'))
+    table.insert(player.spriteSheetRun, LG.newImage('Insumos/Player/run/player_run_08.png'))
+    table.insert(player.spriteSheetRun, LG.newImage('Insumos/Player/run/player_run_09.png'))
 
     -- Animação de ficar Parado
-    table.insert(player.spriteSheetIdle, love.graphics.newImage('Insumos/Player/idle/player_idle_0.png'))
-    table.insert(player.spriteSheetIdle, love.graphics.newImage('Insumos/Player/idle/player_idle_1.png'))
-    table.insert(player.spriteSheetIdle, love.graphics.newImage('Insumos/Player/idle/player_idle_2.png'))
-    table.insert(player.spriteSheetIdle, love.graphics.newImage('Insumos/Player/idle/player_idle_3.png'))
-    table.insert(player.spriteSheetIdle, love.graphics.newImage('Insumos/Player/idle/player_idle_4.png'))
-    table.insert(player.spriteSheetIdle, love.graphics.newImage('Insumos/Player/idle/player_idle_5.png'))
-    table.insert(player.spriteSheetIdle, love.graphics.newImage('Insumos/Player/idle/player_idle_6.png'))
-    table.insert(player.spriteSheetIdle, love.graphics.newImage('Insumos/Player/idle/player_idle_7.png'))
+    table.insert(player.spriteSheetIdle, LG.newImage('Insumos/Player/idle/player_idle_0.png'))
+    table.insert(player.spriteSheetIdle, LG.newImage('Insumos/Player/idle/player_idle_1.png'))
+    table.insert(player.spriteSheetIdle, LG.newImage('Insumos/Player/idle/player_idle_2.png'))
+    table.insert(player.spriteSheetIdle, LG.newImage('Insumos/Player/idle/player_idle_3.png'))
+    table.insert(player.spriteSheetIdle, LG.newImage('Insumos/Player/idle/player_idle_4.png'))
+    table.insert(player.spriteSheetIdle, LG.newImage('Insumos/Player/idle/player_idle_5.png'))
+    table.insert(player.spriteSheetIdle, LG.newImage('Insumos/Player/idle/player_idle_6.png'))
+    table.insert(player.spriteSheetIdle, LG.newImage('Insumos/Player/idle/player_idle_7.png'))
 
     -- Animação de Pular
-    table.insert(player.spriteSheetJump, love.graphics.newImage('Insumos/Player/jump/player_fall.png'))
-    table.insert(player.spriteSheetJump, love.graphics.newImage('Insumos/Player/jump/player_rise.png'))
+    table.insert(player.spriteSheetJump, LG.newImage('Insumos/Player/jump/player_fall.png'))
+    table.insert(player.spriteSheetJump, LG.newImage('Insumos/Player/jump/player_rise.png'))
 
     -- Animação de Correr com Arco
-    table.insert(player.spriteSheetRunBow, love.graphics.newImage('Insumos/PlayerBow/run/player_bow_run_00.png'))
-    table.insert(player.spriteSheetRunBow, love.graphics.newImage('Insumos/PlayerBow/run/player_bow_run_01.png'))
-    table.insert(player.spriteSheetRunBow, love.graphics.newImage('Insumos/PlayerBow/run/player_bow_run_02.png'))
-    table.insert(player.spriteSheetRunBow, love.graphics.newImage('Insumos/PlayerBow/run/player_bow_run_03.png'))
-    table.insert(player.spriteSheetRunBow, love.graphics.newImage('Insumos/PlayerBow/run/player_bow_run_04.png'))
-    table.insert(player.spriteSheetRunBow, love.graphics.newImage('Insumos/PlayerBow/run/player_bow_run_05.png'))
-    table.insert(player.spriteSheetRunBow, love.graphics.newImage('Insumos/PlayerBow/run/player_bow_run_06.png'))
-    table.insert(player.spriteSheetRunBow, love.graphics.newImage('Insumos/PlayerBow/run/player_bow_run_07.png'))
-    table.insert(player.spriteSheetRunBow, love.graphics.newImage('Insumos/PlayerBow/run/player_bow_run_08.png'))
-    table.insert(player.spriteSheetRunBow, love.graphics.newImage('Insumos/PlayerBow/run/player_bow_run_09.png'))
+    table.insert(player.spriteSheetRunBow, LG.newImage('Insumos/PlayerBow/run/player_bow_run_00.png'))
+    table.insert(player.spriteSheetRunBow, LG.newImage('Insumos/PlayerBow/run/player_bow_run_01.png'))
+    table.insert(player.spriteSheetRunBow, LG.newImage('Insumos/PlayerBow/run/player_bow_run_02.png'))
+    table.insert(player.spriteSheetRunBow, LG.newImage('Insumos/PlayerBow/run/player_bow_run_03.png'))
+    table.insert(player.spriteSheetRunBow, LG.newImage('Insumos/PlayerBow/run/player_bow_run_04.png'))
+    table.insert(player.spriteSheetRunBow, LG.newImage('Insumos/PlayerBow/run/player_bow_run_05.png'))
+    table.insert(player.spriteSheetRunBow, LG.newImage('Insumos/PlayerBow/run/player_bow_run_06.png'))
+    table.insert(player.spriteSheetRunBow, LG.newImage('Insumos/PlayerBow/run/player_bow_run_07.png'))
+    table.insert(player.spriteSheetRunBow, LG.newImage('Insumos/PlayerBow/run/player_bow_run_08.png'))
+    table.insert(player.spriteSheetRunBow, LG.newImage('Insumos/PlayerBow/run/player_bow_run_09.png'))
 
     -- Animação de ficar Parado com Arco
-    table.insert(player.spriteSheetIdleBow, love.graphics.newImage('Insumos/PlayerBow/idle/player_bow_idle_0.png'))
-    table.insert(player.spriteSheetIdleBow, love.graphics.newImage('Insumos/PlayerBow/idle/player_bow_idle_1.png'))
-    table.insert(player.spriteSheetIdleBow, love.graphics.newImage('Insumos/PlayerBow/idle/player_bow_idle_2.png'))
-    table.insert(player.spriteSheetIdleBow, love.graphics.newImage('Insumos/PlayerBow/idle/player_bow_idle_3.png'))
-    table.insert(player.spriteSheetIdleBow, love.graphics.newImage('Insumos/PlayerBow/idle/player_bow_idle_4.png'))
-    table.insert(player.spriteSheetIdleBow, love.graphics.newImage('Insumos/PlayerBow/idle/player_bow_idle_5.png'))
-    table.insert(player.spriteSheetIdleBow, love.graphics.newImage('Insumos/PlayerBow/idle/player_bow_idle_6.png'))
-    table.insert(player.spriteSheetIdleBow, love.graphics.newImage('Insumos/PlayerBow/idle/player_bow_idle_7.png'))
+    table.insert(player.spriteSheetIdleBow, LG.newImage('Insumos/PlayerBow/idle/player_bow_idle_0.png'))
+    table.insert(player.spriteSheetIdleBow, LG.newImage('Insumos/PlayerBow/idle/player_bow_idle_1.png'))
+    table.insert(player.spriteSheetIdleBow, LG.newImage('Insumos/PlayerBow/idle/player_bow_idle_2.png'))
+    table.insert(player.spriteSheetIdleBow, LG.newImage('Insumos/PlayerBow/idle/player_bow_idle_3.png'))
+    table.insert(player.spriteSheetIdleBow, LG.newImage('Insumos/PlayerBow/idle/player_bow_idle_4.png'))
+    table.insert(player.spriteSheetIdleBow, LG.newImage('Insumos/PlayerBow/idle/player_bow_idle_5.png'))
+    table.insert(player.spriteSheetIdleBow, LG.newImage('Insumos/PlayerBow/idle/player_bow_idle_6.png'))
+    table.insert(player.spriteSheetIdleBow, LG.newImage('Insumos/PlayerBow/idle/player_bow_idle_7.png'))
 
     -- Animação de Pular com Arco
-    table.insert(player.spriteSheetJumpBow, love.graphics.newImage('Insumos/PlayerBow/jump/player_bow_fall.png'))
-    table.insert(player.spriteSheetJumpBow, love.graphics.newImage('Insumos/PlayerBow/jump/player_bow_rise.png'))
+    table.insert(player.spriteSheetJumpBow, LG.newImage('Insumos/PlayerBow/jump/player_bow_fall.png'))
+    table.insert(player.spriteSheetJumpBow, LG.newImage('Insumos/PlayerBow/jump/player_bow_rise.png'))
 end
 
 function RunThroughImages(dt)
@@ -425,4 +442,12 @@ function RunThroughImages(dt)
     if currentSpriteJumpBow >= 2 then
         currentSpriteJumpBow = 1
     end
+end
+
+function HaveColission(player, arco)
+    -- Calcular a distância centro a centro(Pitagoras)
+    local distancia = math.sqrt((player.x - arco.x)^2 + (player.y - arco.y)^2)
+
+    -- Verificar a colisão 
+    return distancia < (player.size + arco.size) / 2
 end
