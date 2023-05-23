@@ -181,10 +181,21 @@ end
 
 function love.keypressed(k)
     if k == '1' then
+        -- Fase a ser exibida
         fase = 1
+        -- Aqui vou limpar o antigo mundo criado
+        -- E cria-lo novamente
+        player.collider = world:destroy()
+        world = wf.newWorld(0, 9.81 * 4000, true)
+        player.collider = world:newBSGRectangleCollider(150, 575, 100, 130, 10)
+        player.collider:setFixedRotation(true)
         RenderMap()        
     elseif k == '2' then
         fase = 2
+        player.collider = world:destroy()
+        world = wf.newWorld(0, 9.81 * 4000, true)
+        player.collider = world:newBSGRectangleCollider(150, 575, 100, 130, 10)
+        player.collider:setFixedRotation(true)
         RenderMap()
     end
 
@@ -208,7 +219,7 @@ function RenderMap()
                 table.insert(walls, wall)
             end
         end
-    elseif fase == 2 then        
+    elseif fase == 2 then
         if gameMapCave.layers['Chao'] then
             for i, obj in pairs(gameMapCave.layers['Chao'].objects) do
                 wall = world:newRectangleCollider(obj.x, obj.y, obj.width, obj.height)
