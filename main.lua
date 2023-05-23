@@ -129,20 +129,12 @@ function love.draw()
     cam:detach()
 
     -- Renderiza a barra de vida do usuário
-    LG.draw(player.spriteHealthBar[playerLife], 100, 100)
+    LG.draw(player.spriteHealthBar[playerLife], 5, 5)
 
     if player.y > 577 then
         love.graphics.setNewFont(20)
         love.graphics.print("Morreu" , 700, 400)        
-    end    
-
-    if arma == 'z' then
-        love.graphics.print("Item: Arco", 100, 10);
-    else
-        love.graphics.print("Item: ", 100, 10);
-    end
-
-    
+    end            
 end
 
 function love.update(dt)
@@ -219,6 +211,14 @@ function love.keypressed(k)
     elseif k == 'z' then
         arma = 'z'
         RenderPlayer()
+    end
+
+    if k == '0' then
+        if playerLife > 1 then 
+            playerLife = playerLife - 1
+        else 
+           playerLife = 5 
+        end
     end
 end
 
@@ -401,11 +401,11 @@ function LoadPlayerImages()
     table.insert(player.spriteSheetJumpBow, LG.newImage('Insumos/PlayerBow/jump/player_bow_rise.png'))
 
     -- Barra de vida do personagem
-    table.insert(player.spriteHealthBar, LG.newImage('Insumos/Player/healthbar/healthBar5.png'))
-    table.insert(player.spriteHealthBar, LG.newImage('Insumos/Player/healthbar/healthBar4.png'))
-    table.insert(player.spriteHealthBar, LG.newImage('Insumos/Player/healthbar/healthBar3.png'))
-    table.insert(player.spriteHealthBar, LG.newImage('Insumos/Player/healthbar/healthBar2.png'))
     table.insert(player.spriteHealthBar, LG.newImage('Insumos/Player/healthbar/healthBar1.png'))
+    table.insert(player.spriteHealthBar, LG.newImage('Insumos/Player/healthbar/healthBar2.png'))
+    table.insert(player.spriteHealthBar, LG.newImage('Insumos/Player/healthbar/healthBar3.png'))
+    table.insert(player.spriteHealthBar, LG.newImage('Insumos/Player/healthbar/healthBar4.png'))
+    table.insert(player.spriteHealthBar, LG.newImage('Insumos/Player/healthbar/healthBar5.png'))
 end
 
 function RunThroughImages(dt)
