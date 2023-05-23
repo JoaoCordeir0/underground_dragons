@@ -43,50 +43,64 @@ local woodsCheckPoint = {}
 
 -- Variavel para controlar arma
 local arco = {}
-
 local arma = 'hand'
 
-function love.load()
+-- Variaveis para controle de disparos
+local veloc = 500
+local posShot = {x = 0, y = 0, larg = 50, alt = 50}
+local shots = {}
 
+-- Timers para limitação de tiros
+local shotTrue = true
+local activateMax = 0.6
+local timeShot = activateMax
+
+function love.load()
+    
     -- Adiciona minha biblioteca de colisão
     wf = require 'libraries/windfield'
     world = wf.newWorld(0, 9.81 * 4000, true)
-
+    
     -- Adiciona minha biblioteca de camera
     camera = require 'libraries/camera'
     cam = camera()
-
+    
     -- Adiciona minha bibliotca de animação
     anim8 = require 'libraries/anim8'
-
+    
     -- Adiciona minha biblioteca de inserção de mapa
     sti = require 'libraries/sti'
-
+    
     -- Teste se a Fase é 1 ou 2
-    -- Assim criar a fase selecionada    
-    gameMapWoods = sti('maps/woods.lua')    
-    gameMapCave = sti('maps/cave.lua')     
+    -- Assim criar a fase selecionada
+    gameMapWoods = sti('maps/woods.lua')
+    gameMapCave = sti('maps/cave.lua')
     
     -- Carrega o Personagem
     -- Vida do personagem
     player.spriteHealthBar = {}
     -- Personagem sem arma
-    player.spriteSheetRun = {} -- Tabela de animacao do personagem andando
-    player.spriteSheetIdle = {} -- Tabela de animacao do personagem parado
-    player.spriteSheetJump = {} -- Tabela de animacao do personagem pulando
+    player.spriteSheetRun = {}-- Tabela de animacao do personagem andando
+    player.spriteSheetIdle = {}-- Tabela de animacao do personagem parado
+    player.spriteSheetJump = {}-- Tabela de animacao do personagem pulando
     -- Personagem com arco
-    player.spriteSheetRunBow = {} -- Tabela de animacao do personagem andando com arco
-    player.spriteSheetIdleBow = {} -- Tabela de animacao do personagem parado com arco
-    player.spriteSheetJumpBow = {} -- Tabela de animacao do personagem pulando com arco
-
+    player.spriteSheetRunBow = {}-- Tabela de animacao do personagem andando com arco
+    player.spriteSheetIdleBow = {}-- Tabela de animacao do personagem parado com arco
+    player.spriteSheetJumpBow = {}-- Tabela de animacao do personagem pulando com arco
+    
+    -- Informações da posição inicial do player
     player.x = 100
     player.y = 575
     player.speed = 400
     player.size = 130
-
+    
+    -- Informações iniciais dos disparos
+    posShot.x = player.x
+    posShot.y = player.y
+    
     -- Carrea minhas imagens do personagem
     LoadPlayerImages()
-
+    
     -- Cria o mundo e o colisor do meu personagem
     player.collider = world:newBSGRectangleCollider(player.x, player.y, 100, 130, 10)
     player.collider:setFixedRotation(true)
@@ -98,18 +112,18 @@ function love.load()
     currentSpriteRunBow = 1
     currentSpriteIdleBow = 1
     currentSpriteJumpBow = 1
-
+    
     -- Posição, tamanho do checkpoint de troca de mapa
     woodsCheckPoint.x = 3750
-    woodsCheckPoint.y = 500    
+    woodsCheckPoint.y = 500
     woodsCheckPoint.size = 200
-
+    
     -- Posição, tamanho e imagem do arco
     arco.x = 1530
     arco.y = 350
     arco.img = LG.newImage('Insumos/Objeto/weapon_bow.png')
     arco.size = 100
-                
+    
     -- Carrega o Mapa
     RenderMap()
 end
@@ -124,88 +138,95 @@ function love.draw()
             gameMapWoods:drawLayer(gameMapWoods.layers["Background1"])
             gameMapWoods:drawLayer(gameMapWoods.layers["Caverna"])
             gameMapWoods:drawLayer(gameMapWoods.layers["Camada de Blocos 1"])
-        elseif fase == 2 then           
+        elseif fase == 2 then
             gameMapCave:drawLayer(gameMapCave.layers["Camada de Blocos 3"])
             gameMapCave:drawLayer(gameMapCave.layers["Camada de Blocos 2"])
             gameMapCave:drawLayer(gameMapCave.layers["Camada de Blocos 1"])
             gameMapCave:drawLayer(gameMapCave.layers["caverna"])
             gameMapCave:drawLayer(gameMapCave.layers["Camada de Blocos 5"])
         end
-
+        
         -- Executa animação do personagem
         RenderPlayer()
-
+        
         if fase == 1 and arma == 'hand' then
             LG.draw(arco.img, arco.x, arco.y)
+        end     
+        
+        for i, actual in pairs(shots) do        
+            LG.draw(actual.img, actual.x, actual.y)
         end
-    cam:detach()
+    cam:detach()    
 
     -- Timer do jogo
     LG.print(showTimer, 1450, 10)
-
-    -- Renderiza a barra de vida do usuário 
-    LG.draw(player.spriteHealthBar[playerLife], 5, 5)  
-    -- Renderiza a arma que está sendo usada
-    weaponInUse()    
     
-    LG.print('X -> ' .. player.x, 10, 200)  
-    LG.print('Y -> ' .. player.y, 10, 220)  
+    -- Renderiza a barra de vida do usuário
+    LG.draw(player.spriteHealthBar[playerLife], 5, 5)
+    -- Renderiza a arma que está sendo usada
+    weaponInUse()
+    
+    LG.print('X -> ' .. player.x, 10, 200)
+    LG.print('Y -> ' .. player.y, 10, 220)
 end
 
 function love.update(dt)
     -- Inicia o cronometro do jogo
     gameTimer()
-
+    
     -- Velocidade do colisor X e Y
     local vx = 0
     local vy = 0
-
+    
     -- Controles basicos
     if LK.isDown('right') or LK.isDown('d') then
         vx = player.speed
-    elseif LK.isDown('left') or LK.isDown('a')  then
+    elseif LK.isDown('left') or LK.isDown('a') then
         vx = player.speed * -1
     end
-        
+    
     if LK.isDown('up') or LK.isDown('w') then
-        vy = player.speed * -5            
-    end   
+        vy = player.speed * -5
+    end
     
     -- Foca a camera no personagem passando o X e Y dele
-    cam:lookAt(player.x, player.y -200)
-
+    cam:lookAt(player.x, player.y - 200)
+    
     local w = LG.getWidth()
     local h = LG.getHeight()
-   
+    
     -- Esconde fundo preto Left
-    if cam.x < w/2 then
-        cam.x = w/2
+    if cam.x < w / 2 then
+        cam.x = w / 2
     end
-
+    
     -- Esconde fundo preto (Top)
-    if cam.y < h/2 then
-        cam.y = h/2
+    if cam.y < h / 2 then
+        cam.y = h / 2
     end
-
+    
     -- Identifica queda nos espinhos
     if player.y > 610 then
-        playerLife = 1        
+        playerLife = 1
     end
 
+    posShot.x = player.x
+    posShot.y = player.y
+    
     player.collider:setLinearVelocity(vx, vy)
-
+    
     world:update(dt)
     player.x = player.collider:getX()
-    player.y = player.collider:getY()
-
+    player.y = player.collider:getY()   
+    
     -- Percorre as imagens gerando a animação
     RunThroughImages(dt)
-
+    
     -- Colidir com arco e pegar arco
     if HaveColission(player, arco) then
-       arma = 'arco'       
+        arma = 'arco'
     end
-
+    
     -- Testa colisão da troca de mapas / Fase 1 para Fase 2
     if HaveColission(player, woodsCheckPoint) then
         fase = 2
@@ -213,8 +234,11 @@ function love.update(dt)
         world = wf.newWorld(0, 9.81 * 4000, true)
         player.collider = world:newBSGRectangleCollider(150, 575, 100, 130, 10)
         player.collider:setFixedRotation(true)
-        RenderMap()      
+        RenderMap()
     end
+    
+    -- Controle de disparos
+    controlShots(dt)
 end
 
 function love.keypressed(k)
@@ -227,9 +251,9 @@ function love.keypressed(k)
         world = wf.newWorld(0, 9.81 * 4000, true)
         player.collider = world:newBSGRectangleCollider(150, 575, 100, 130, 10)
         player.collider:setFixedRotation(true)
-        RenderMap()        
+        RenderMap()
     end
-
+    
     if k == 'x' then
         arma = 'hand'
         RenderPlayer()
@@ -237,12 +261,12 @@ function love.keypressed(k)
         arma = 'arco'
         RenderPlayer()
     end
-
+    
     if k == '0' then
-        if playerLife > 1 then 
+        if playerLife > 1 then
             playerLife = playerLife - 1
-        else 
-           playerLife = 5 
+        else
+            playerLife = 5
         end
     end
 end
@@ -250,7 +274,7 @@ end
 -- Renderizando o mapa
 function RenderMap()
     -- Função que carrega as colisões do mapa
-    if fase == 1 then  
+    if fase == 1 then
         if gameMapWoods.layers['Chao'] then
             for i, obj in pairs(gameMapWoods.layers['Chao'].objects) do
                 wall = world:newRectangleCollider(obj.x, obj.y, obj.width, obj.height)
@@ -269,16 +293,16 @@ function RenderMap()
     end
 end
 
--- Renderiza e executa animações do personagem 
+-- Renderiza e executa animações do personagem
 function RenderPlayer()
-
+    
     if arma == 'hand' then
-        if not LK.isDown('right') and 
-           not LK.isDown('d') and 
-           not LK.isDown('left') and 
-           not LK.isDown('a') and 
-           not LK.isDown('up') and 
-           not LK.isDown('w') then  
+        if not LK.isDown('right') and
+            not LK.isDown('d') and
+            not LK.isDown('left') and
+            not LK.isDown('a') and
+            not LK.isDown('up') and
+            not LK.isDown('w') then
             LG.draw(
                 player.spriteSheetIdle[math.floor(currentSpriteIdle)],
                 player.x,
@@ -288,9 +312,9 @@ function RenderPlayer()
                 1,
                 player.spriteSheetIdle[1]:getWidth() / 2,
                 player.spriteSheetIdle[1]:getHeight() / 2
-            )
-        end 
-
+        )
+        end
+        
         -- Animação de correr
         if LK.isDown('right') or LK.isDown('d') or LK.isDown('left') or LK.isDown('a') then
             if not LK.isDown('up') and not LK.isDown('w') then
@@ -303,10 +327,10 @@ function RenderPlayer()
                     1,
                     player.spriteSheetRun[1]:getWidth() / 2,
                     player.spriteSheetRun[1]:getHeight() / 2
-                )
+            )
             end
         end
-
+        
         -- Animação de Pular
         if LK.isDown('up') or LK.isDown('w') then
             LG.draw(
@@ -318,15 +342,15 @@ function RenderPlayer()
                 1,
                 player.spriteSheetJump[1]:getWidth() / 2,
                 player.spriteSheetJump[1]:getHeight() / 2
-            )
+        )
         end
     elseif arma == 'arco' then
         if not LK.isDown('right') and
-           not LK.isDown('d') and
-           not LK.isDown('left') and
-           not LK.isDown('a') and
-           not LK.isDown('up') and
-           not LK.isDown('w') then
+            not LK.isDown('d') and
+            not LK.isDown('left') and
+            not LK.isDown('a') and
+            not LK.isDown('up') and
+            not LK.isDown('w') then
             LG.draw(
                 player.spriteSheetIdleBow[math.floor(currentSpriteIdleBow)],
                 player.x,
@@ -336,9 +360,9 @@ function RenderPlayer()
                 1,
                 player.spriteSheetIdleBow[1]:getWidth() / 2,
                 player.spriteSheetIdleBow[1]:getHeight() / 2
-            )
+        )
         end
-
+        
         -- Animação de correr
         if LK.isDown('right') or LK.isDown('d') or LK.isDown('left') or LK.isDown('a') then
             if not LK.isDown('up') and not LK.isDown('w') then
@@ -351,10 +375,10 @@ function RenderPlayer()
                     1,
                     player.spriteSheetRunBow[1]:getWidth() / 2,
                     player.spriteSheetRunBow[1]:getHeight() / 2
-                )
+            )
             end
         end
-
+        
         -- Animação de Pular
         if LK.isDown('up') or LK.isDown('w') then
             LG.draw(
@@ -366,16 +390,15 @@ function RenderPlayer()
                 1,
                 player.spriteSheetJumpBow[1]:getWidth() / 2,
                 player.spriteSheetJumpBow[1]:getHeight() / 2
-            )
+        )
         end
     
     end
-    -- Animação de parado  
-    
+-- Animação de parado
 end
 
 function LoadPlayerImages()
-
+    
     -- Aqui vou criar as tabelas das animações diferentes
     -- Animação de Correr
     table.insert(player.spriteSheetRun, LG.newImage('Insumos/Player/run/player_run_00.png'))
@@ -388,7 +411,7 @@ function LoadPlayerImages()
     table.insert(player.spriteSheetRun, LG.newImage('Insumos/Player/run/player_run_07.png'))
     table.insert(player.spriteSheetRun, LG.newImage('Insumos/Player/run/player_run_08.png'))
     table.insert(player.spriteSheetRun, LG.newImage('Insumos/Player/run/player_run_09.png'))
-
+    
     -- Animação de ficar Parado
     table.insert(player.spriteSheetIdle, LG.newImage('Insumos/Player/idle/player_idle_0.png'))
     table.insert(player.spriteSheetIdle, LG.newImage('Insumos/Player/idle/player_idle_1.png'))
@@ -398,11 +421,11 @@ function LoadPlayerImages()
     table.insert(player.spriteSheetIdle, LG.newImage('Insumos/Player/idle/player_idle_5.png'))
     table.insert(player.spriteSheetIdle, LG.newImage('Insumos/Player/idle/player_idle_6.png'))
     table.insert(player.spriteSheetIdle, LG.newImage('Insumos/Player/idle/player_idle_7.png'))
-
+    
     -- Animação de Pular
     table.insert(player.spriteSheetJump, LG.newImage('Insumos/Player/jump/player_fall.png'))
     table.insert(player.spriteSheetJump, LG.newImage('Insumos/Player/jump/player_rise.png'))
-
+    
     -- Animação de Correr com Arco
     table.insert(player.spriteSheetRunBow, LG.newImage('Insumos/PlayerBow/run/player_bow_run_00.png'))
     table.insert(player.spriteSheetRunBow, LG.newImage('Insumos/PlayerBow/run/player_bow_run_01.png'))
@@ -414,7 +437,7 @@ function LoadPlayerImages()
     table.insert(player.spriteSheetRunBow, LG.newImage('Insumos/PlayerBow/run/player_bow_run_07.png'))
     table.insert(player.spriteSheetRunBow, LG.newImage('Insumos/PlayerBow/run/player_bow_run_08.png'))
     table.insert(player.spriteSheetRunBow, LG.newImage('Insumos/PlayerBow/run/player_bow_run_09.png'))
-
+    
     -- Animação de ficar Parado com Arco
     table.insert(player.spriteSheetIdleBow, LG.newImage('Insumos/PlayerBow/idle/player_bow_idle_0.png'))
     table.insert(player.spriteSheetIdleBow, LG.newImage('Insumos/PlayerBow/idle/player_bow_idle_1.png'))
@@ -424,11 +447,11 @@ function LoadPlayerImages()
     table.insert(player.spriteSheetIdleBow, LG.newImage('Insumos/PlayerBow/idle/player_bow_idle_5.png'))
     table.insert(player.spriteSheetIdleBow, LG.newImage('Insumos/PlayerBow/idle/player_bow_idle_6.png'))
     table.insert(player.spriteSheetIdleBow, LG.newImage('Insumos/PlayerBow/idle/player_bow_idle_7.png'))
-
+    
     -- Animação de Pular com Arco
     table.insert(player.spriteSheetJumpBow, LG.newImage('Insumos/PlayerBow/jump/player_bow_fall.png'))
     table.insert(player.spriteSheetJumpBow, LG.newImage('Insumos/PlayerBow/jump/player_bow_rise.png'))
-
+    
     -- Barra de vida do personagem
     table.insert(player.spriteHealthBar, LG.newImage('Insumos/Player/healthbar/healthBar1.png'))
     table.insert(player.spriteHealthBar, LG.newImage('Insumos/Player/healthbar/healthBar2.png'))
@@ -439,38 +462,37 @@ end
 
 function RunThroughImages(dt)
     -- Animação personagem
-
     -- Animações sem armas
     -- Animação Corrida
     currentSpriteRun = currentSpriteRun + 10 * dt
     if currentSpriteRun >= 10 then
         currentSpriteRun = 1
     end
-
+    
     -- Animação Parado
     currentSpriteIdle = currentSpriteIdle + 10 * dt
     if currentSpriteIdle >= 8 then
         currentSpriteIdle = 1
     end
-
+    
     -- Animação Pulo
     currentSpriteJump = currentSpriteJump + 10 * dt
     if currentSpriteJump >= 2 then
         currentSpriteJump = 1
     end
-
+    
     -- Animações com arco
     -- Animação Corrida com arco
     currentSpriteRunBow = currentSpriteRunBow + 10 * dt
     if currentSpriteRunBow >= 10 then
         currentSpriteRunBow = 1
     end
-
+    
     -- Animação Parado com arco
     if currentSpriteIdleBow >= 8 then
         currentSpriteIdleBow = 1
     end
-
+    
     -- Animação Pulo com arco
     if currentSpriteJumpBow >= 2 then
         currentSpriteJumpBow = 1
@@ -479,40 +501,83 @@ end
 
 function HaveColission(player, item)
     -- Calcular a distância centro a centro(Pitagoras)
-    local distancia = math.sqrt((player.x - item.x)^2 + (player.y - item.y)^2)
-
-    -- Verificar a colisão 
+    local distancia = math.sqrt((player.x - item.x) ^ 2 + (player.y - item.y) ^ 2)
+    
+    -- Verificar a colisão
     return distancia < (player.size + item.size) / 2
 end
 
 function weaponInUse()
-    if arma == 'arco' then        
-        return LG.draw(LG.newImage('Insumos/Objeto/weapon_bow.png'), 300, 5) 
-    end  
+    if arma == 'arco' then
+        return LG.draw(LG.newImage('Insumos/Objeto/weapon_bow.png'), 300, 5)
+    end
 end
 
 function gameTimer()
     -- Definido para 5 minutos
     local finish = false
     local time = math.ceil(love.timer.getTime())
-
+    
     if time < 60 then
-        seconds = time 
+        seconds = time
     elseif time >= 60 and time < 120 then
-        seconds = time - 60        
+        seconds = time - 60
     elseif time >= 120 and time < 180 then
-        seconds = time - 120        
+        seconds = time - 120
     elseif time >= 180 and time < 240 then
-        seconds = time - 180        
+        seconds = time - 180
     elseif time >= 240 and time < 300 then
-        seconds = time - 240   
+        seconds = time - 240
     elseif time >= 300 then
-        finish = true         
-    end    
-
+        finish = true
+    end
+    
     if not finish then
         showTimer = math.ceil(time / 60) - 1 .. ":" .. (seconds < 10 and 0 .. seconds or seconds)
     else
         showTimer = "Tempo esgotado"
+    end
+end
+
+function controlShots(dt)
+
+    -- Temporizador dos disparos
+    timeShot = timeShot - (1 * dt)
+    if timeShot < 0 then
+        shotTrue = true
+    end
+    -- Controlar o disparo com o mouse
+    if love.mouse.isDown(1) and shotTrue and arma == 'arco' then
+        -- Definir a posição do disparo (meio da caixa)
+        local X = posShot.x + (posShot.larg / 2)
+        local Y = posShot.y + (posShot.alt / 2)  
+        
+        -- Coletar a posição do alvo (mouse)
+        local alvoX, alvoY = love.mouse.getPosition()
+        
+        -- Alvo do tiro
+        local angle = math.atan2((alvoY - Y), (alvoX - X))
+        
+        -- Criar o novo disparo e incluir na tabela
+        newShot = {x = X, y = Y, ang = angle, img = LG.newImage('Insumos/Objeto/arrow.png')}
+        table.insert(shots, newShot)
+
+        shotTrue = false
+
+        timeShot = activateMax
+    end
+        
+    -- Animação dos disparos
+    for i, actual in pairs(shots) do
+        -- Física: Dx = deslocamento na direção X, Dy = deslocamento na direção Y
+        local Dx = veloc * math.cos(actual.ang)
+        local Dy = veloc * math.sin(actual.ang)
+        actual.x = actual.x + (Dx * dt)
+        actual.y = actual.y + (Dy * dt)
+        
+        -- Verificação para a limpeza de disparos que sairem da tela
+        -- if actual.x > LG.getWidth() or actual.y > LG.getHeight() or actual.x < 0 or actual.y < 0 then
+        --     table.remove(shots, i)
+        -- end
     end
 end
