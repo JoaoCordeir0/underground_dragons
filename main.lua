@@ -133,7 +133,9 @@ function love.draw()
         -- Executa animação do personagem
         RenderPlayer()
 
-        LG.draw(arco.img, arco.x, arco.y)
+        if fase == 1 and arma == 'hand' then
+            LG.draw(arco.img, arco.x, arco.y)
+        end
     cam:detach()
 
     -- Renderiza a barra de vida do usuário 
