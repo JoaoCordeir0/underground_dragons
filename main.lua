@@ -5,9 +5,10 @@ local LQ = love.graphics.newQuad
 local LM = love.mouse
 
 -- Variaveis para tratar colisão do mapa e personagem
-local gameMap;
-local wf;
-local wall;
+local gameMapWoods
+local gameMapCave
+local wf
+local wall
 local walls = {}
 local player = {}
 
@@ -26,6 +27,13 @@ local currentSpriteRun
 local currentSpriteIdle
 local currentSpriteJump
 
+local currentSpriteRunBow
+local currentSpriteIdleBow
+local currentSpriteJumpBow
+local currentSpriteAttackBow
+
+-- Variavel para controlar arma
+local arma = 'x'
 
 function love.load()
 
@@ -49,47 +57,35 @@ function love.load()
     gameMapCave = sti('maps/cave.lua')       
     
     -- Carrega o Personagem
+    -- Personagem sem arma
     player.spriteSheetRun = {} -- Tabela de animacao do personagem andando
     player.spriteSheetIdle = {} -- Tabela de animacao do personagem parado
     player.spriteSheetJump = {} -- Tabela de animacao do personagem pulando
+    -- Personagem com arco
+    player.spriteSheetRunBow = {} -- Tabela de animacao do personagem andando com arco
+    player.spriteSheetIdleBow = {} -- Tabela de animacao do personagem parado com arco
+    player.spriteSheetJumpBow = {} -- Tabela de animacao do personagem pulando com arco
+
     player.x = 100
     player.y = 575
     player.speed = 400
 
-    -- Aqui vou criar as tabelas das 3 animações diferentes
-    -- Animação de Correr
-    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_00.png'))
-    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_01.png'))
-    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_02.png'))
-    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_03.png'))
-    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_04.png'))
-    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_05.png'))
-    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_06.png'))
-    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_07.png'))
-    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_08.png'))
-    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_09.png'))
-    -- Animação de ficar Parado
-    table.insert(player.spriteSheetIdle, love.graphics.newImage('Insumos/Player/idle/player_idle_0.png'))
-    table.insert(player.spriteSheetIdle, love.graphics.newImage('Insumos/Player/idle/player_idle_1.png'))
-    table.insert(player.spriteSheetIdle, love.graphics.newImage('Insumos/Player/idle/player_idle_2.png'))
-    table.insert(player.spriteSheetIdle, love.graphics.newImage('Insumos/Player/idle/player_idle_3.png'))
-    table.insert(player.spriteSheetIdle, love.graphics.newImage('Insumos/Player/idle/player_idle_4.png'))
-    table.insert(player.spriteSheetIdle, love.graphics.newImage('Insumos/Player/idle/player_idle_5.png'))
-    table.insert(player.spriteSheetIdle, love.graphics.newImage('Insumos/Player/idle/player_idle_6.png'))
-    table.insert(player.spriteSheetIdle, love.graphics.newImage('Insumos/Player/idle/player_idle_7.png'))
-    -- Animação de Pular
-    table.insert(player.spriteSheetJump, love.graphics.newImage('Insumos/Player/jump/player_fall.png'))
-    table.insert(player.spriteSheetJump, love.graphics.newImage('Insumos/Player/jump/player_rise.png'))
-    -- Aqui vou criar as tabelas das 3 animações diferentes
+    -- Carrea minhas imagens do personagem
+    LoadPlayerImages()
 
     -- Cria o mundo e o colisor do meu personagem
     player.collider = world:newBSGRectangleCollider(player.x, player.y, 100, 130, 10)
     player.collider:setFixedRotation(true)
+    -- Sprite atual/inicial sem arma
     currentSpriteRun = 1
     currentSpriteIdle = 1
     currentSpriteJump = 1
-    -- Carrega o Personagem
+    -- Sprite atual/inicial com arco
+    currentSpriteRunBow = 1
+    currentSpriteIdleBow = 1
+    currentSpriteJumpBow = 1
     
+    -- Carrega o Mapa
     RenderMap()
 end
 
@@ -114,19 +110,26 @@ function love.draw()
         end
 
         -- Executa animação do personagem
-        RenderPlayer()        
-
-        -- Fiz o teste de morrer, não fiz o teste de colisão
-        -- no espinho, até pq o espinho ta sem colisão
-        -- mas resumindo se o Y do player for maior que 577 
-        -- ele morre, é só um teste e uma ideia inicial de morte
-        love.graphics.print(player.y, 700, 300)
-        
-        if player.y > 577 then
-            love.graphics.setNewFont(20)
-            love.graphics.print("Morreu" , 700, 400)        
-        end
+        RenderPlayer()
     cam:detach()
+
+     -- Fiz o teste de morrer, não fiz o teste de colisão
+    -- no espinho, até pq o espinho ta sem colisão
+    -- mas resumindo se o Y do player for maior que 577 
+    -- ele morre, é só um teste e uma ideia inicial de morte
+    love.graphics.print(player.y, 700, 300)
+    
+    if player.y > 577 then
+        love.graphics.setNewFont(20)
+        love.graphics.print("Morreu" , 700, 400)        
+    end
+
+    love.graphics.print("Vida: 3", 10, 10);
+    if arma == 'z' then
+        love.graphics.print("Item: Arco", 100, 10);
+    else
+        love.graphics.print("Item: ", 100, 10);
+    end
 end
 
 function love.update(dt)
@@ -172,24 +175,8 @@ function love.update(dt)
     player.x = player.collider:getX()
     player.y = player.collider:getY()
 
-    -- Animação personagem
-    -- Animação Corrida
-    currentSpriteRun = currentSpriteRun + 10 * dt
-    if currentSpriteRun >= 10 then
-        currentSpriteRun = 1
-    end
-
-    -- Animação Parado
-    currentSpriteIdle = currentSpriteIdle + 10 * dt
-    if currentSpriteIdle >= 8 then
-        currentSpriteIdle = 1
-    end
-
-    -- Animação Pulo
-    currentSpriteJump = currentSpriteJump + 10 * dt
-    if currentSpriteJump >= 2 then
-        currentSpriteJump = 1
-    end
+    -- Percorre as imagens gerando a animação
+    RunThroughImages(dt)
 end
 
 function love.keypressed(k)
@@ -199,6 +186,14 @@ function love.keypressed(k)
     elseif k == '2' then
         fase = 2
         RenderMap()
+    end
+
+    if k == 'x' then
+        arma = 'x'
+        RenderPlayer()
+    elseif k == 'z' then
+        arma = 'z'
+        RenderPlayer()
     end
 end
 
@@ -225,51 +220,198 @@ function RenderMap()
 end
 
 -- Renderiza e executa animações do personagem 
-function RenderPlayer()         
-    -- Animação de parado  
-    if not LK.isDown('right') and 
-       not LK.isDown('d') and 
-       not LK.isDown('left') and 
-       not LK.isDown('a') and 
-       not LK.isDown('up') and 
-       not LK.isDown('w') then  
-        LG.draw(
-            player.spriteSheetIdle[math.floor(currentSpriteIdle)],
-            player.x,
-            player.y,
-            0,
-            1,
-            1,
-            player.spriteSheetIdle[1]:getWidth() / 2,
-            player.spriteSheetIdle[1]:getHeight() / 2
-        )
-    end 
+function RenderPlayer()
 
-    -- Animação de correr
-    if LK.isDown('right') or LK.isDown('d') or LK.isDown('left') or LK.isDown('a') then
-        LG.draw(
-            player.spriteSheetRun[math.floor(currentSpriteRun)],
-            player.x,
-            player.y,
-            0,
-            1,
-            1,
-            player.spriteSheetRun[1]:getWidth() / 2,
-            player.spriteSheetRun[1]:getHeight() / 2
-        )
+    if arma == 'x' then
+        if not LK.isDown('right') and 
+           not LK.isDown('d') and 
+           not LK.isDown('left') and 
+           not LK.isDown('a') and 
+           not LK.isDown('up') and 
+           not LK.isDown('w') then  
+            LG.draw(
+                player.spriteSheetIdle[math.floor(currentSpriteIdle)],
+                player.x,
+                player.y,
+                0,
+                1,
+                1,
+                player.spriteSheetIdle[1]:getWidth() / 2,
+                player.spriteSheetIdle[1]:getHeight() / 2
+            )
+        end 
+
+        -- Animação de correr
+        if LK.isDown('right') or LK.isDown('d') or LK.isDown('left') or LK.isDown('a') then
+            LG.draw(
+                player.spriteSheetRun[math.floor(currentSpriteRun)],
+                player.x,
+                player.y,
+                0,
+                1,
+                1,
+                player.spriteSheetRun[1]:getWidth() / 2,
+                player.spriteSheetRun[1]:getHeight() / 2
+            )
+        end
+
+        -- Animação de Pular
+        if LK.isDown('up') or LK.isDown('w') then
+            LG.draw(
+                player.spriteSheetJump[math.floor(currentSpriteJump)],
+                player.x,
+                player.y,
+                0,
+                1,
+                1,
+                player.spriteSheetJump[1]:getWidth() / 2,
+                player.spriteSheetJump[1]:getHeight() / 2
+            )
+        end
+    elseif arma == 'z' then
+        if not LK.isDown('right') and
+           not LK.isDown('d') and
+           not LK.isDown('left') and
+           not LK.isDown('a') and
+           not LK.isDown('up') and
+           not LK.isDown('w') then
+            LG.draw(
+                player.spriteSheetIdleBow[math.floor(currentSpriteIdleBow)],
+                player.x,
+                player.y,
+                0,
+                1,
+                1,
+                player.spriteSheetIdleBow[1]:getWidth() / 2,
+                player.spriteSheetIdleBow[1]:getHeight() / 2
+            )
+        end
+
+        -- Animação de correr
+        if LK.isDown('right') or LK.isDown('d') or LK.isDown('left') or LK.isDown('a') then
+            LG.draw(
+                player.spriteSheetRunBow[math.floor(currentSpriteRunBow)],
+                player.x,
+                player.y,
+                0,
+                1,
+                1,
+                player.spriteSheetRunBow[1]:getWidth() / 2,
+                player.spriteSheetRunBow[1]:getHeight() / 2
+            )
+        end
+
+        -- Animação de Pular
+        if LK.isDown('up') or LK.isDown('w') then
+            LG.draw(
+                player.spriteSheetJumpBow[math.floor(currentSpriteJumpBow)],
+                player.x,
+                player.y,
+                0,
+                1,
+                1,
+                player.spriteSheetJumpBow[1]:getWidth() / 2,
+                player.spriteSheetJumpBow[1]:getHeight() / 2
+            )
+        end
+    
     end
+    -- Animação de parado  
+    
+end
+
+function LoadPlayerImages()
+
+    -- Aqui vou criar as tabelas das animações diferentes
+    -- Animação de Correr
+    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_00.png'))
+    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_01.png'))
+    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_02.png'))
+    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_03.png'))
+    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_04.png'))
+    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_05.png'))
+    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_06.png'))
+    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_07.png'))
+    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_08.png'))
+    table.insert(player.spriteSheetRun, love.graphics.newImage('Insumos/Player/run/player_run_09.png'))
+
+    -- Animação de ficar Parado
+    table.insert(player.spriteSheetIdle, love.graphics.newImage('Insumos/Player/idle/player_idle_0.png'))
+    table.insert(player.spriteSheetIdle, love.graphics.newImage('Insumos/Player/idle/player_idle_1.png'))
+    table.insert(player.spriteSheetIdle, love.graphics.newImage('Insumos/Player/idle/player_idle_2.png'))
+    table.insert(player.spriteSheetIdle, love.graphics.newImage('Insumos/Player/idle/player_idle_3.png'))
+    table.insert(player.spriteSheetIdle, love.graphics.newImage('Insumos/Player/idle/player_idle_4.png'))
+    table.insert(player.spriteSheetIdle, love.graphics.newImage('Insumos/Player/idle/player_idle_5.png'))
+    table.insert(player.spriteSheetIdle, love.graphics.newImage('Insumos/Player/idle/player_idle_6.png'))
+    table.insert(player.spriteSheetIdle, love.graphics.newImage('Insumos/Player/idle/player_idle_7.png'))
 
     -- Animação de Pular
-    if LK.isDown('up') or LK.isDown('w') then
-        LG.draw(
-            player.spriteSheetJump[math.floor(currentSpriteJump)],
-            player.x,
-            player.y,
-            0,
-            1,
-            1,
-            player.spriteSheetJump[1]:getWidth() / 2,
-            player.spriteSheetJump[1]:getHeight() / 2
-        )
+    table.insert(player.spriteSheetJump, love.graphics.newImage('Insumos/Player/jump/player_fall.png'))
+    table.insert(player.spriteSheetJump, love.graphics.newImage('Insumos/Player/jump/player_rise.png'))
+
+    -- Animação de Correr com Arco
+    table.insert(player.spriteSheetRunBow, love.graphics.newImage('Insumos/PlayerBow/run/player_bow_run_00.png'))
+    table.insert(player.spriteSheetRunBow, love.graphics.newImage('Insumos/PlayerBow/run/player_bow_run_01.png'))
+    table.insert(player.spriteSheetRunBow, love.graphics.newImage('Insumos/PlayerBow/run/player_bow_run_02.png'))
+    table.insert(player.spriteSheetRunBow, love.graphics.newImage('Insumos/PlayerBow/run/player_bow_run_03.png'))
+    table.insert(player.spriteSheetRunBow, love.graphics.newImage('Insumos/PlayerBow/run/player_bow_run_04.png'))
+    table.insert(player.spriteSheetRunBow, love.graphics.newImage('Insumos/PlayerBow/run/player_bow_run_05.png'))
+    table.insert(player.spriteSheetRunBow, love.graphics.newImage('Insumos/PlayerBow/run/player_bow_run_06.png'))
+    table.insert(player.spriteSheetRunBow, love.graphics.newImage('Insumos/PlayerBow/run/player_bow_run_07.png'))
+    table.insert(player.spriteSheetRunBow, love.graphics.newImage('Insumos/PlayerBow/run/player_bow_run_08.png'))
+    table.insert(player.spriteSheetRunBow, love.graphics.newImage('Insumos/PlayerBow/run/player_bow_run_09.png'))
+
+    -- Animação de ficar Parado com Arco
+    table.insert(player.spriteSheetIdleBow, love.graphics.newImage('Insumos/PlayerBow/idle/player_bow_idle_0.png'))
+    table.insert(player.spriteSheetIdleBow, love.graphics.newImage('Insumos/PlayerBow/idle/player_bow_idle_1.png'))
+    table.insert(player.spriteSheetIdleBow, love.graphics.newImage('Insumos/PlayerBow/idle/player_bow_idle_2.png'))
+    table.insert(player.spriteSheetIdleBow, love.graphics.newImage('Insumos/PlayerBow/idle/player_bow_idle_3.png'))
+    table.insert(player.spriteSheetIdleBow, love.graphics.newImage('Insumos/PlayerBow/idle/player_bow_idle_4.png'))
+    table.insert(player.spriteSheetIdleBow, love.graphics.newImage('Insumos/PlayerBow/idle/player_bow_idle_5.png'))
+    table.insert(player.spriteSheetIdleBow, love.graphics.newImage('Insumos/PlayerBow/idle/player_bow_idle_6.png'))
+    table.insert(player.spriteSheetIdleBow, love.graphics.newImage('Insumos/PlayerBow/idle/player_bow_idle_7.png'))
+
+    -- Animação de Pular com Arco
+    table.insert(player.spriteSheetJumpBow, love.graphics.newImage('Insumos/PlayerBow/jump/player_bow_fall.png'))
+    table.insert(player.spriteSheetJumpBow, love.graphics.newImage('Insumos/PlayerBow/jump/player_bow_rise.png'))
+end
+
+function RunThroughImages(dt)
+    -- Animação personagem
+
+    -- Animações sem armas
+    -- Animação Corrida
+    currentSpriteRun = currentSpriteRun + 10 * dt
+    if currentSpriteRun >= 10 then
+        currentSpriteRun = 1
+    end
+
+    -- Animação Parado
+    currentSpriteIdle = currentSpriteIdle + 10 * dt
+    if currentSpriteIdle >= 8 then
+        currentSpriteIdle = 1
+    end
+
+    -- Animação Pulo
+    currentSpriteJump = currentSpriteJump + 10 * dt
+    if currentSpriteJump >= 2 then
+        currentSpriteJump = 1
+    end
+
+    -- Animações com arco
+    -- Animação Corrida com arco
+    currentSpriteRunBow = currentSpriteRunBow + 10 * dt
+    if currentSpriteRunBow >= 10 then
+        currentSpriteRunBow = 1
+    end
+
+    -- Animação Parado com arco
+    if currentSpriteIdleBow >= 8 then
+        currentSpriteIdleBow = 1
+    end
+
+    -- Animação Pulo com arco
+    if currentSpriteJumpBow >= 2 then
+        currentSpriteJumpBow = 1
     end
 end
