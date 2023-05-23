@@ -44,14 +44,10 @@ function love.load()
     sti = require 'libraries/sti'
 
     -- Teste se a Fase é 1 ou 2
-    -- Assim criar a fase selecionada
-    if fase == 1 then
-        gameMap = sti('maps/woods.lua')
-    end
-    if fase == 2 then
-        gameMap = sti('maps/cave.lua')
-    end    
-
+    -- Assim criar a fase selecionada    
+    gameMapWoods = sti('maps/woods.lua')    
+    gameMapCave = sti('maps/cave.lua')       
+    
     -- Carrega o Personagem
     player.spriteSheetRun = {} -- Tabela de animacao do personagem andando
     player.spriteSheetIdle = {} -- Tabela de animacao do personagem parado
@@ -87,13 +83,13 @@ function love.load()
     -- Aqui vou criar as tabelas das 3 animações diferentes
 
     -- Cria o mundo e o colisor do meu personagem
-    player.collider = world:newBSGRectangleCollider(200, 500, 100, 130, 10)
+    player.collider = world:newBSGRectangleCollider(player.x, player.y, 100, 130, 10)
     player.collider:setFixedRotation(true)
     currentSpriteRun = 1
     currentSpriteIdle = 1
     currentSpriteJump = 1
     -- Carrega o Personagem
-
+    
     RenderMap()
 end
 
@@ -104,21 +100,21 @@ function love.draw()
 
         -- Caso a Fase for igual a 1 carrega os layers/camadas do meu mapa
         if fase == 1 then
-            gameMap:drawLayer(gameMap.layers["Background3"])
-            gameMap:drawLayer(gameMap.layers["Background2"])
-            gameMap:drawLayer(gameMap.layers["Background1"])
-            gameMap:drawLayer(gameMap.layers["Caverna"])
-            gameMap:drawLayer(gameMap.layers["Camada de Blocos 1"])
+            gameMapWoods:drawLayer(gameMapWoods.layers["Background3"])
+            gameMapWoods:drawLayer(gameMapWoods.layers["Background2"])
+            gameMapWoods:drawLayer(gameMapWoods.layers["Background1"])
+            gameMapWoods:drawLayer(gameMapWoods.layers["Caverna"])
+            gameMapWoods:drawLayer(gameMapWoods.layers["Camada de Blocos 1"])
         elseif fase == 2 then           
-            gameMap:drawLayer(gameMap.layers["Camada de Blocos 3"])
-            gameMap:drawLayer(gameMap.layers["Camada de Blocos 2"])
-            gameMap:drawLayer(gameMap.layers["Camada de Blocos 1"])
-            gameMap:drawLayer(gameMap.layers["caverna"])
-            gameMap:drawLayer(gameMap.layers["Camada de Blocos 5"])
+            gameMapCave:drawLayer(gameMapCave.layers["Camada de Blocos 3"])
+            gameMapCave:drawLayer(gameMapCave.layers["Camada de Blocos 2"])
+            gameMapCave:drawLayer(gameMapCave.layers["Camada de Blocos 1"])
+            gameMapCave:drawLayer(gameMapCave.layers["caverna"])
+            gameMapCave:drawLayer(gameMapCave.layers["Camada de Blocos 5"])
         end
 
         -- Executa animação do personagem
-        RenderPlayer()
+        RenderPlayer()        
 
         -- Fiz o teste de morrer, não fiz o teste de colisão
         -- no espinho, até pq o espinho ta sem colisão
@@ -147,7 +143,7 @@ function love.update(dt)
     end
         
     if LK.isDown('up') or LK.isDown('w') then
-        vy = player.speed * -5
+        vy = player.speed * -5            
     end
 
     --[[if LK.isDown('up') or LK.isDown('w') then
@@ -199,23 +195,36 @@ end
 function love.keypressed(k)
     if k == '1' then
         fase = 1
+        RenderMap()        
     elseif k == '2' then
         fase = 2
+        RenderMap()
     end
 end
 
+-- Renderizando o mapa
 function RenderMap()
     -- Função que carrega as colisões do mapa
-    if gameMap.layers['Chao'] then
-        for i, obj in pairs(gameMap.layers['Chao'].objects) do
-            wall = world:newRectangleCollider(obj.x, obj.y, obj.width, obj.height)
-            wall:setType('static')
-            table.insert(walls, wall)
+    if fase == 1 then  
+        if gameMapWoods.layers['Chao'] then
+            for i, obj in pairs(gameMapWoods.layers['Chao'].objects) do
+                wall = world:newRectangleCollider(obj.x, obj.y, obj.width, obj.height)
+                wall:setType('static')
+                table.insert(walls, wall)
+            end
+        end
+    elseif fase == 2 then        
+        if gameMapCave.layers['Chao'] then
+            for i, obj in pairs(gameMapCave.layers['Chao'].objects) do
+                wall = world:newRectangleCollider(obj.x, obj.y, obj.width, obj.height)
+                wall:setType('static')
+                table.insert(walls, wall)
+            end
         end
     end
 end
 
--- Executa animações do personagem 
+-- Renderiza e executa animações do personagem 
 function RenderPlayer()         
     -- Animação de parado  
     if not LK.isDown('right') and 
@@ -223,8 +232,7 @@ function RenderPlayer()
        not LK.isDown('left') and 
        not LK.isDown('a') and 
        not LK.isDown('up') and 
-       not LK.isDown('w') and 
-       not LK.isDown('s') then  
+       not LK.isDown('w') then  
         LG.draw(
             player.spriteSheetIdle[math.floor(currentSpriteIdle)],
             player.x,
