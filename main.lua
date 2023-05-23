@@ -12,6 +12,9 @@ local wall
 local walls = {}
 local player = {}
 
+-- Variaveis para controlar a barra de vida
+local playerLife = 5
+
 -- Variaveis para tratar o mundo
 local fase = 1
 local world
@@ -59,6 +62,8 @@ function love.load()
     gameMapCave = sti('maps/cave.lua')     
     
     -- Carrega o Personagem
+    -- Vida do personagem
+    player.spriteHealthBar = {}
     -- Personagem sem arma
     player.spriteSheetRun = {} -- Tabela de animacao do personagem andando
     player.spriteSheetIdle = {} -- Tabela de animacao do personagem parado
@@ -123,18 +128,14 @@ function love.draw()
         LG.draw(arco.img, arco.x, arco.y)
     cam:detach()
 
-     -- Fiz o teste de morrer, não fiz o teste de colisão
-    -- no espinho, até pq o espinho ta sem colisão
-    -- mas resumindo se o Y do player for maior que 577 
-    -- ele morre, é só um teste e uma ideia inicial de morte
-    love.graphics.print(player.y, 700, 300)
-    
+    -- Renderiza a barra de vida do usuário
+    LG.draw(player.spriteHealthBar[playerLife], 100, 100)
+
     if player.y > 577 then
         love.graphics.setNewFont(20)
         love.graphics.print("Morreu" , 700, 400)        
-    end
+    end    
 
-    love.graphics.print("Vida: 3", 10, 10);
     if arma == 'z' then
         love.graphics.print("Item: Arco", 100, 10);
     else
@@ -160,11 +161,7 @@ function love.update(dt)
     if LK.isDown('up') or LK.isDown('w') then
         vy = player.speed * -5            
     end
-
-    --[[if LK.isDown('up') or LK.isDown('w') then
-        player.collider:applyLinearImpulse(0,-1000)
-    end]]
-
+    
     -- Foca a camera no personagem passando o X e Y dele
     cam:lookAt(player.x, player.y -200)
 
@@ -402,6 +399,13 @@ function LoadPlayerImages()
     -- Animação de Pular com Arco
     table.insert(player.spriteSheetJumpBow, LG.newImage('Insumos/PlayerBow/jump/player_bow_fall.png'))
     table.insert(player.spriteSheetJumpBow, LG.newImage('Insumos/PlayerBow/jump/player_bow_rise.png'))
+
+    -- Barra de vida do personagem
+    table.insert(player.spriteHealthBar, LG.newImage('Insumos/Player/healthbar/healthBar5.png'))
+    table.insert(player.spriteHealthBar, LG.newImage('Insumos/Player/healthbar/healthBar4.png'))
+    table.insert(player.spriteHealthBar, LG.newImage('Insumos/Player/healthbar/healthBar3.png'))
+    table.insert(player.spriteHealthBar, LG.newImage('Insumos/Player/healthbar/healthBar2.png'))
+    table.insert(player.spriteHealthBar, LG.newImage('Insumos/Player/healthbar/healthBar1.png'))
 end
 
 function RunThroughImages(dt)
