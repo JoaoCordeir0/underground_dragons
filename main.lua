@@ -4,6 +4,9 @@ local LG = love.graphics
 local LQ = love.graphics.newQuad
 local LM = love.mouse
 
+-- Variavel de controle do tempo do jogo
+local showTimer = "0:00"
+
 -- Variaveis para tratar colisão do mapa e personagem
 local gameMapWoods
 local gameMapCave
@@ -112,7 +115,6 @@ function love.load()
 end
 
 function love.draw()
-
     -- Coloco o foco da camera no meu personagem
     cam:attach()
         -- Caso a Fase for igual a 1 carrega os layers/camadas do meu mapa
@@ -138,6 +140,9 @@ function love.draw()
         end
     cam:detach()
 
+    -- Timer do jogo
+    LG.print(showTimer, 1450, 10)
+
     -- Renderiza a barra de vida do usuário 
     LG.draw(player.spriteHealthBar[playerLife], 5, 5)  
     -- Renderiza a arma que está sendo usada
@@ -148,6 +153,8 @@ function love.draw()
 end
 
 function love.update(dt)
+    -- Inicia o cronometro do jogo
+    gameTimer()
 
     -- Velocidade do colisor X e Y
     local vx = 0
@@ -482,4 +489,30 @@ function weaponInUse()
     if arma == 'arco' then        
         return LG.draw(LG.newImage('Insumos/Objeto/weapon_bow.png'), 300, 5) 
     end  
+end
+
+function gameTimer()
+    -- Definido para 5 minutos
+    local finish = false
+    local time = math.ceil(love.timer.getTime())
+
+    if time < 60 then
+        seconds = time 
+    elseif time >= 60 and time < 120 then
+        seconds = time - 60        
+    elseif time >= 120 and time < 180 then
+        seconds = time - 120        
+    elseif time >= 180 and time < 240 then
+        seconds = time - 180        
+    elseif time >= 240 and time < 300 then
+        seconds = time - 240   
+    elseif time >= 300 then
+        finish = true         
+    end    
+
+    if not finish then
+        showTimer = math.ceil(time / 60) - 1 .. ":" .. (seconds < 10 and 0 .. seconds or seconds)
+    else
+        showTimer = "Tempo esgotado"
+    end
 end
