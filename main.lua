@@ -4,13 +4,17 @@ local LG = love.graphics
 local LQ = love.graphics.newQuad
 local LM = love.mouse
 
+-- Variavel para o menu
+local suit = require 'libraries/suit'
+local backgroundMenu
+
 -- Variavel de controle do tempo do jogo
 local showTimer = "0:00"
 
 -- Variaveis para tratar colisão do mapa e personagem
 local gameMapWoods
 local gameMapCave
-local wf
+local wf = require 'libraries/windfield'
 local wall
 local walls = {}
 local player = {}
@@ -22,14 +26,17 @@ local espinhos = {}
 local playerLife = 5
 
 -- Variaveis para tratar o mundo
-local fase = 1
+local fase = 0 --[[Fase:
+                   0 - Menu Inicial
+                   1 - Woods Map
+                   2 - Cave Map]]
 local world
 
 -- Variaveis para tratar as bibliotecas
-local camera
+local camera = require 'libraries/camera'
 local cam
-local anim8
-local sti
+local anim8 = require 'libraries/anim8'
+local sti = require 'libraries/sti'
 
 -- Variavel para a animação
 local currentSpriteRun
@@ -56,24 +63,19 @@ local shots = {}
 
 -- Timers para limitação de tiros
 local shotTrue = true
-local activateMax = 0.6
+local activateMax = 1.5
 local timeShot = activateMax
 
 function love.load()
+
+    -- Adiciona meu background no menu
+    backgroundMenu = LG.newImage('Insumos/Menu/backgroundMenu.jpg')
     
     -- Adiciona minha biblioteca de colisão
-    wf = require 'libraries/windfield'
     world = wf.newWorld(0, 9.81 * 4000, true)
     
     -- Adiciona minha biblioteca de camera
-    camera = require 'libraries/camera'
     cam = camera()
-    
-    -- Adiciona minha bibliotca de animação
-    anim8 = require 'libraries/anim8'
-    
-    -- Adiciona minha biblioteca de inserção de mapa
-    sti = require 'libraries/sti'
     
     -- Teste se a Fase é 1 ou 2
     -- Assim criar a fase selecionada
@@ -102,7 +104,7 @@ function love.load()
     
     -- Informações iniciais dos disparos
     posShot.x = player.x
-    posShot.y = player.y
+    posShot.y = player.y - 20
     
     -- Carrea minhas imagens do personagem
     LoadPlayerImages()
@@ -137,118 +139,133 @@ function love.load()
 end
 
 function love.draw()
-    -- Coloco o foco da camera no meu personagem
-    cam:attach()
-        -- Caso a Fase for igual a 1 carrega os layers/camadas do meu mapa
-        if fase == 1 then
-            gameMapWoods:drawLayer(gameMapWoods.layers["Background3"])
-            gameMapWoods:drawLayer(gameMapWoods.layers["Background2"])
-            gameMapWoods:drawLayer(gameMapWoods.layers["Background1"])
-            gameMapWoods:drawLayer(gameMapWoods.layers["Caverna"])
-            gameMapWoods:drawLayer(gameMapWoods.layers["Camada de Blocos 1"])
-        elseif fase == 2 then
-            gameMapCave:drawLayer(gameMapCave.layers["Camada de Blocos 3"])
-            gameMapCave:drawLayer(gameMapCave.layers["Camada de Blocos 2"])
-            gameMapCave:drawLayer(gameMapCave.layers["Camada de Blocos 1"])
-            gameMapCave:drawLayer(gameMapCave.layers["caverna"])
-            gameMapCave:drawLayer(gameMapCave.layers["Camada de Blocos 5"])
-        end
-        
-        -- Executa animação do personagem
-        RenderPlayer()
-        
-        if fase == 1 and arma == 'hand' then
-            LG.draw(arco.img, arco.x, arco.y)
-        end     
-        
-        for i, actual in pairs(shots) do        
-            LG.draw(actual.img, actual.x, actual.y)
-        end
 
-       
-    cam:detach()    
+    if fase == 1 or fase == 2 then
+        
+        -- Coloco o foco da camera no meu personagem
+        cam:attach()
 
-    -- Timer do jogo
-    LG.print(showTimer, 1450, 10)
-    
-    -- Renderiza a barra de vida do usuário
-    LG.draw(player.spriteHealthBar[playerLife], 5, 5)
-    -- Renderiza a arma que está sendo usada
-    weaponInUse()
-    
-    LG.print('X -> ' .. player.x, 10, 200)
-    LG.print('Y -> ' .. player.y, 10, 220)
+            -- Caso a Fase for igual a 1 carrega os layers/camadas do meu mapa
+            if fase == 1 then
+                gameMapWoods:drawLayer(gameMapWoods.layers["Background3"])
+                gameMapWoods:drawLayer(gameMapWoods.layers["Background2"])
+                gameMapWoods:drawLayer(gameMapWoods.layers["Background1"])
+                gameMapWoods:drawLayer(gameMapWoods.layers["Caverna"])
+                gameMapWoods:drawLayer(gameMapWoods.layers["Camada de Blocos 1"])
+            elseif fase == 2 then
+                gameMapCave:drawLayer(gameMapCave.layers["Camada de Blocos 3"])
+                gameMapCave:drawLayer(gameMapCave.layers["Camada de Blocos 2"])
+                gameMapCave:drawLayer(gameMapCave.layers["Camada de Blocos 1"])
+                gameMapCave:drawLayer(gameMapCave.layers["caverna"])
+                gameMapCave:drawLayer(gameMapCave.layers["Camada de Blocos 5"])
+            end
+            
+            -- Executa animação do personagem
+            RenderPlayer()
+            
+            if fase == 1 and arma == 'hand' then
+                LG.draw(arco.img, arco.x, arco.y)
+            end     
+            
+            for i, actual in pairs(shots) do        
+                LG.draw(actual.img, actual.x, actual.y)
+            end
+
+        
+        cam:detach()    
+
+        -- Timer do jogo
+        LG.print(showTimer, 1450, 10)
+
+        -- Renderiza a barra de vida do usuário
+        LG.draw(player.spriteHealthBar[playerLife], 5, 5)
+        -- Renderiza a arma que está sendo usada
+        weaponInUse()
+
+        LG.print('X -> ' .. player.x, 10, 200)
+        LG.print('Y -> ' .. player.y, 10, 220)
+
+    end if fase == 0 then
+        LG.draw(backgroundMenu, 0 ,0)
+        suit.draw()
+    end
+
 end
 
 function love.update(dt)
-    -- Inicia o cronometro do jogo
-    gameTimer()
-    
-    -- Velocidade do colisor X e Y
-    local vx = 0
-    local vy = 0
-    
-    -- Controles basicos
-    if LK.isDown('right') or LK.isDown('d') then
-        vx = player.speed
-    elseif LK.isDown('left') or LK.isDown('a') then
-        vx = player.speed * -1
-    end
-    
-    if LK.isDown('up') or LK.isDown('w') then
-        vy = player.speed * -5
-    end
-    
-    -- Foca a camera no personagem passando o X e Y dele
-    cam:lookAt(player.x, player.y - 200)
-    
-    local w = LG.getWidth()
-    local h = LG.getHeight()
-    
-    -- Esconde fundo preto Left
-    if cam.x < w / 2 then
-        cam.x = w / 2
-    end
-    
-    -- Esconde fundo preto (Top)
-    if cam.y < h / 2 then
-        cam.y = h / 2
-    end
-    
-    -- Identifica queda nos espinhos
-    if player.y > 610 then
-        playerLife = 1
-    end
 
-    posShot.x = player.x
-    posShot.y = player.y
-    
-    player.collider:setLinearVelocity(vx, vy)
-    
-    world:update(dt)
-    player.x = player.collider:getX()
-    player.y = player.collider:getY()   
-    
-    -- Percorre as imagens gerando a animação
-    RunThroughImages(dt)
-    
-    -- Colidir com arco e pegar arco
-    if HaveColission(player, arco) then
-        arma = 'arco'
+    if fase == 0 then
+       MenuButtons()
+    else
+         -- Inicia o cronometro do jogo
+        gameTimer()
+        
+        -- Velocidade do colisor X e Y
+        local vx = 0
+        local vy = 0
+        
+        -- Controles basicos
+        if LK.isDown('right') or LK.isDown('d') then
+            vx = player.speed
+        elseif LK.isDown('left') or LK.isDown('a') then
+            vx = player.speed * -1
+        end
+        
+        if LK.isDown('up') or LK.isDown('w') then
+            vy = player.speed * -5
+        end
+        
+        -- Foca a camera no personagem passando o X e Y dele
+        cam:lookAt(player.x, player.y - 200)
+        
+        local w = LG.getWidth()
+        local h = LG.getHeight()
+        
+        -- Esconde fundo preto Left
+        if cam.x < w / 2 then
+            cam.x = w / 2
+        end
+        
+        -- Esconde fundo preto (Top)
+        if cam.y < h / 2 then
+            cam.y = h / 2
+        end
+        
+        -- Identifica queda nos espinhos
+        if player.y > 610 then
+            playerLife = 1
+        end
+
+        posShot.x = player.x
+        posShot.y = player.y - 20
+        
+        player.collider:setLinearVelocity(vx, vy)
+        
+        world:update(dt)
+        player.x = player.collider:getX()
+        player.y = player.collider:getY()   
+        
+        -- Percorre as imagens gerando a animação
+        RunThroughImages(dt)
+        
+        -- Colidir com arco e pegar arco
+        if HaveColission(player, arco) then
+            arma = 'arco'
+        end
+        
+        -- Testa colisão da troca de mapas / Fase 1 para Fase 2
+        if HaveColission(player, woodsCheckPoint) then
+            fase = 2
+            player.collider = world:destroy()
+            world = wf.newWorld(0, 9.81 * 4000, true)
+            player.collider = world:newBSGRectangleCollider(150, 575, 100, 130, 10)
+            player.collider:setFixedRotation(true)
+            RenderMap()
+        end
+        
+        -- Controle de disparos
+        controlShots(dt)
     end
-    
-    -- Testa colisão da troca de mapas / Fase 1 para Fase 2
-    if HaveColission(player, woodsCheckPoint) then
-        fase = 2
-        player.collider = world:destroy()
-        world = wf.newWorld(0, 9.81 * 4000, true)
-        player.collider = world:newBSGRectangleCollider(150, 575, 100, 130, 10)
-        player.collider:setFixedRotation(true)
-        RenderMap()
-    end
-    
-    -- Controle de disparos
-    controlShots(dt)
 end
 
 function love.keypressed(k)
@@ -284,7 +301,7 @@ end
 -- Renderizando o mapa
 function RenderMap()
     -- Função que carrega as colisões do mapa
-    if fase == 1 then
+    if fase == 1 or fase == 0 then
         if gameMapWoods.layers['Chao'] then
             for i, obj in pairs(gameMapWoods.layers['Chao'].objects) do
                 wall = world:newRectangleCollider(obj.x, obj.y, obj.width, obj.height)
@@ -300,7 +317,7 @@ function RenderMap()
                 table.insert(espinhos, espinho)
             end
         end
-    elseif fase == 2 then
+    elseif fase == 2 or fase == 0 then
         if gameMapCave.layers['Chao'] then
             for i, obj in pairs(gameMapCave.layers['Chao'].objects) do
                 wall = world:newRectangleCollider(obj.x, obj.y, obj.width, obj.height)
@@ -364,11 +381,12 @@ function RenderPlayer()
         end
     elseif arma == 'arco' then
         if not LK.isDown('right') and
-            not LK.isDown('d') and
-            not LK.isDown('left') and
-            not LK.isDown('a') and
-            not LK.isDown('up') and
-            not LK.isDown('w') then
+           not LK.isDown('d') and
+           not LK.isDown('left') and
+           not LK.isDown('a') and
+           not LK.isDown('up') and
+           not LK.isDown('w') and
+           not LM.isDown(1) then
             LG.draw(
                 player.spriteSheetIdleBow[math.floor(currentSpriteIdleBow)],
                 player.x,
@@ -383,7 +401,7 @@ function RenderPlayer()
         
         -- Animação de correr
         if LK.isDown('right') or LK.isDown('d') or LK.isDown('left') or LK.isDown('a') then
-            if not LK.isDown('up') and not LK.isDown('w') then
+            if not LK.isDown('up') and not LK.isDown('w') and not LM.isDown(1) then
                 LG.draw(
                     player.spriteSheetRunBow[math.floor(currentSpriteRunBow)],
                     player.x,
@@ -409,9 +427,22 @@ function RenderPlayer()
                 player.spriteSheetJumpBow[1]:getWidth() / 2,
                 player.spriteSheetJumpBow[1]:getHeight() / 2
             )
-        end    
-    end
+        end
 
+        if LM.isDown(1) then
+            LG.draw(
+                player.spriteSheetAttackBow[math.floor(currentSpriteAttackBow)],
+                player.x,
+                player.y,
+                0,
+                1,
+                1,
+                player.spriteSheetAttackBow[1]:getWidth() / 2,
+                player.spriteSheetAttackBow[1]:getHeight() / 2
+            )
+        end
+    end 
+    
     if playerLife == 1 then
         LG.draw(
             player.spriteSheetDie[math.floor(currentSpriteDie)],
@@ -424,6 +455,8 @@ function RenderPlayer()
             player.spriteSheetDie[1]:getHeight() / 2
         )
     end
+
+  
 -- Animação de parado
 end
 
@@ -651,5 +684,19 @@ function controlShots(dt)
         -- if actual.x > LG.getWidth() or actual.y > LG.getHeight() or actual.x < 0 or actual.y < 0 then
         --     table.remove(shots, i)
         -- end
+    end
+end
+
+function MenuButtons()
+    suit.layout:reset((LG.getWidth() / 2) - 250,(LG.getHeight() / 2) - 50)
+    suit.layout:padding(10)
+    suit.Label("Dragões do Submundo", (LG.getWidth() / 2) - 100,100, 200,30)
+    
+    if suit.Button("Iniciar História", {id=1}, suit.layout:row(500,50)).hit then
+      fase = 1
+    end
+    
+    if suit.Button("Sair", {id=2}, suit.layout:row()).hit then
+        love.event.quit()
     end
 end
