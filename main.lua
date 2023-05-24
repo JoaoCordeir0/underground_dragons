@@ -66,7 +66,16 @@ local shotTrue = true
 local activateMax = 1.5
 local timeShot = activateMax
 
+-- Fontes do jogo
+local gameFont
+local deadFont
+
 function love.load()
+    -- Fonte
+    gameFont = LG.newFont('Insumos/Fonts/RetroMario-Regular.otf', 18)
+    deadFont = LG.newFont('Insumos/Fonts/RetroMario-Regular.otf', 100)
+    
+    LG.setFont(gameFont)
 
     -- Adiciona meu background no menu
     backgroundMenu = LG.newImage('Insumos/Menu/backgroundMenu.jpg')
@@ -86,15 +95,15 @@ function love.load()
     -- Vida do personagem
     player.spriteHealthBar = {}
     -- Personagem sem arma
-    player.spriteSheetRun = {}-- Tabela de animacao do personagem andando
-    player.spriteSheetIdle = {}-- Tabela de animacao do personagem parado
-    player.spriteSheetJump = {}-- Tabela de animacao do personagem pulando
-    player.spriteSheetDie = {}-- Tabela de animacao do personagem morrendo
+    player.spriteSheetRun = {} -- Tabela de animacao do personagem andando
+    player.spriteSheetIdle = {} -- Tabela de animacao do personagem parado
+    player.spriteSheetJump = {} -- Tabela de animacao do personagem pulando
+    player.spriteSheetDie = {} -- Tabela de animacao do personagem morrendo
     -- Personagem com arco
-    player.spriteSheetRunBow = {}-- Tabela de animacao do personagem andando com arco
-    player.spriteSheetIdleBow = {}-- Tabela de animacao do personagem parado com arco
-    player.spriteSheetJumpBow = {}-- Tabela de animacao do personagem pulando com arco
-    player.spriteSheetAttackBow = {}-- Tabela de animacao do personagem atirando com arco
+    player.spriteSheetRunBow = {} -- Tabela de animacao do personagem andando com arco
+    player.spriteSheetIdleBow = {} -- Tabela de animacao do personagem parado com arco
+    player.spriteSheetJumpBow = {} -- Tabela de animacao do personagem pulando com arco
+    player.spriteSheetAttackBow = {} -- Tabela de animacao do personagem atirando com arco
     
     -- Informações da posição inicial do player
     player.x = 100
@@ -135,16 +144,18 @@ function love.load()
     arco.size = 100
     
     -- Carrega o Mapa
-    RenderMap()
+    RenderMap()    
 end
 
 function love.draw()
 
-    if fase == 1 or fase == 2 then
-        
+    if fase == 1 or fase == 2 then        
         -- Coloco o foco da camera no meu personagem
-        cam:attach()
-
+        cam:attach()            
+            if playerLife == 1 then
+                LG.setColor(255, 0, 0)     
+            end            
+            
             -- Caso a Fase for igual a 1 carrega os layers/camadas do meu mapa
             if fase == 1 then
                 gameMapWoods:drawLayer(gameMapWoods.layers["Background3"])
@@ -159,20 +170,27 @@ function love.draw()
                 gameMapCave:drawLayer(gameMapCave.layers["caverna"])
                 gameMapCave:drawLayer(gameMapCave.layers["Camada de Blocos 5"])
             end
-            
+                
             -- Executa animação do personagem
             RenderPlayer()
-            
+                
             if fase == 1 and arma == 'hand' then
                 LG.draw(arco.img, arco.x, arco.y)
             end     
             
             for i, actual in pairs(shots) do        
                 LG.draw(actual.img, actual.x, actual.y)
-            end
-
-        
+            end            
+            
         cam:detach()    
+       
+        if playerLife == 1 then                                                          
+            LG.setFont(deadFont)                
+            LG.setColor(255, 255, 255)     
+            LG.print('Morreu', (player.x - deadFont:getWidth('Morreu')) - 150, (LG.getHeight() - deadFont:getHeight('Morreu')) / 2)                 
+            LG.setFont(gameFont)        
+            suit.draw() -- Renderiza o botão de reiniciar              
+        end
 
         -- Timer do jogo
         LG.print(showTimer, 1450, 10)
@@ -192,12 +210,13 @@ function love.draw()
 
 end
 
-function love.update(dt)
-
+function love.update(dt)    
     if fase == 0 then
-       MenuButtons()
-    else
-         -- Inicia o cronometro do jogo
+        MenuButtons()    
+    elseif fase > 0 and playerLife == 1 then
+        restartGame()        
+    elseif fase > 0 and playerLife > 1 then
+        -- Inicia o cronometro do jogo
         gameTimer()
         
         -- Velocidade do colisor X e Y
@@ -214,8 +233,7 @@ function love.update(dt)
         if LK.isDown('up') or LK.isDown('w') then
             vy = player.speed * -5
         end
-        
-        -- Foca a camera no personagem passando o X e Y dele
+    
         cam:lookAt(player.x, player.y - 200)
         
         local w = LG.getWidth()
@@ -236,8 +254,9 @@ function love.update(dt)
             playerLife = 1
         end
 
+        -- Posição de saida dos tiros, no caso o personagem
         posShot.x = player.x
-        posShot.y = player.y - 20
+        posShot.y = player.y - 20     
         
         player.collider:setLinearVelocity(vx, vy)
         
@@ -295,7 +314,7 @@ function love.keypressed(k)
         else
             playerLife = 5
         end
-    end
+    end    
 end
 
 -- Renderizando o mapa
@@ -329,120 +348,7 @@ function RenderMap()
 end
 
 -- Renderiza e executa animações do personagem
-function RenderPlayer()
-    
-    if arma == 'hand' then
-        if not LK.isDown('right') and
-            not LK.isDown('d') and
-            not LK.isDown('left') and
-            not LK.isDown('a') and
-            not LK.isDown('up') and
-            not LK.isDown('w') then
-            LG.draw(
-                player.spriteSheetIdle[math.floor(currentSpriteIdle)],
-                player.x,
-                player.y,
-                0,
-                1,
-                1,
-                player.spriteSheetIdle[1]:getWidth() / 2,
-                player.spriteSheetIdle[1]:getHeight() / 2
-            )
-        end
-        
-        -- Animação de correr
-        if LK.isDown('right') or LK.isDown('d') or LK.isDown('left') or LK.isDown('a') then
-            if not LK.isDown('up') and not LK.isDown('w') then
-                LG.draw(
-                    player.spriteSheetRun[math.floor(currentSpriteRun)],
-                    player.x,
-                    player.y,
-                    0,
-                    1,
-                    1,
-                    player.spriteSheetRun[1]:getWidth() / 2,
-                    player.spriteSheetRun[1]:getHeight() / 2
-            )
-            end
-        end
-        
-        -- Animação de Pular
-        if LK.isDown('up') or LK.isDown('w') then
-            LG.draw(
-                player.spriteSheetJump[math.floor(currentSpriteJump)],
-                player.x,
-                player.y,
-                0,
-                1,
-                1,
-                player.spriteSheetJump[1]:getWidth() / 2,
-                player.spriteSheetJump[1]:getHeight() / 2
-        )
-        end
-    elseif arma == 'arco' then
-        if not LK.isDown('right') and
-           not LK.isDown('d') and
-           not LK.isDown('left') and
-           not LK.isDown('a') and
-           not LK.isDown('up') and
-           not LK.isDown('w') and
-           not LM.isDown(1) then
-            LG.draw(
-                player.spriteSheetIdleBow[math.floor(currentSpriteIdleBow)],
-                player.x,
-                player.y,
-                0,
-                1,
-                1,
-                player.spriteSheetIdleBow[1]:getWidth() / 2,
-                player.spriteSheetIdleBow[1]:getHeight() / 2
-        )
-        end
-        
-        -- Animação de correr
-        if LK.isDown('right') or LK.isDown('d') or LK.isDown('left') or LK.isDown('a') then
-            if not LK.isDown('up') and not LK.isDown('w') and not LM.isDown(1) then
-                LG.draw(
-                    player.spriteSheetRunBow[math.floor(currentSpriteRunBow)],
-                    player.x,
-                    player.y,
-                    0,
-                    1,
-                    1,
-                    player.spriteSheetRunBow[1]:getWidth() / 2,
-                    player.spriteSheetRunBow[1]:getHeight() / 2
-            )
-            end
-        end
-        
-        -- Animação de Pular
-        if LK.isDown('up') or LK.isDown('w') then
-            LG.draw(
-                player.spriteSheetJumpBow[math.floor(currentSpriteJumpBow)],
-                player.x,
-                player.y,
-                0,
-                1,
-                1,
-                player.spriteSheetJumpBow[1]:getWidth() / 2,
-                player.spriteSheetJumpBow[1]:getHeight() / 2
-            )
-        end
-
-        if LM.isDown(1) then
-            LG.draw(
-                player.spriteSheetAttackBow[math.floor(currentSpriteAttackBow)],
-                player.x,
-                player.y,
-                0,
-                1,
-                1,
-                player.spriteSheetAttackBow[1]:getWidth() / 2,
-                player.spriteSheetAttackBow[1]:getHeight() / 2
-            )
-        end
-    end 
-    
+function RenderPlayer()           
     if playerLife == 1 then
         LG.draw(
             player.spriteSheetDie[math.floor(currentSpriteDie)],
@@ -454,10 +360,119 @@ function RenderPlayer()
             player.spriteSheetDie[1]:getWidth() / 2,
             player.spriteSheetDie[1]:getHeight() / 2
         )
-    end
-
-  
--- Animação de parado
+    else 
+        if arma == 'hand' then
+            if not LK.isDown('right') and
+                not LK.isDown('d') and
+                not LK.isDown('left') and
+                not LK.isDown('a') and
+                not LK.isDown('up') and
+                not LK.isDown('w') then
+                LG.draw(
+                    player.spriteSheetIdle[math.floor(currentSpriteIdle)],
+                    player.x,
+                    player.y,
+                    0,
+                    1,
+                    1,
+                    player.spriteSheetIdle[1]:getWidth() / 2,
+                    player.spriteSheetIdle[1]:getHeight() / 2
+                )
+            end
+            
+            -- Animação de correr
+            if LK.isDown('right') or LK.isDown('d') or LK.isDown('left') or LK.isDown('a') then
+                if not LK.isDown('up') and not LK.isDown('w') then
+                    LG.draw(
+                        player.spriteSheetRun[math.floor(currentSpriteRun)],
+                        player.x,
+                        player.y,
+                        0,
+                        1,
+                        1,
+                        player.spriteSheetRun[1]:getWidth() / 2,
+                        player.spriteSheetRun[1]:getHeight() / 2
+                )
+                end
+            end
+            
+            -- Animação de Pular
+            if LK.isDown('up') or LK.isDown('w') then
+                LG.draw(
+                    player.spriteSheetJump[math.floor(currentSpriteJump)],
+                    player.x,
+                    player.y,
+                    0,
+                    1,
+                    1,
+                    player.spriteSheetJump[1]:getWidth() / 2,
+                    player.spriteSheetJump[1]:getHeight() / 2
+            )
+            end
+        elseif arma == 'arco' then
+            if not LK.isDown('right') and
+               not LK.isDown('d') and
+               not LK.isDown('left') and
+               not LK.isDown('a') and
+               not LK.isDown('up') and
+               not LK.isDown('w') and
+               not LM.isDown(1) then
+                LG.draw(
+                    player.spriteSheetIdleBow[math.floor(currentSpriteIdleBow)],
+                    player.x,
+                    player.y,
+                    0,
+                    1,
+                    1,
+                    player.spriteSheetIdleBow[1]:getWidth() / 2,
+                    player.spriteSheetIdleBow[1]:getHeight() / 2
+            )
+            end
+            
+            -- Animação de correr
+            if LK.isDown('right') or LK.isDown('d') or LK.isDown('left') or LK.isDown('a') then
+                if not LK.isDown('up') and not LK.isDown('w') and not LM.isDown(1) then
+                    LG.draw(
+                        player.spriteSheetRunBow[math.floor(currentSpriteRunBow)],
+                        player.x,
+                        player.y,
+                        0,
+                        1,
+                        1,
+                        player.spriteSheetRunBow[1]:getWidth() / 2,
+                        player.spriteSheetRunBow[1]:getHeight() / 2
+                )
+                end
+            end
+            
+            -- Animação de Pular
+            if LK.isDown('up') or LK.isDown('w') then
+                LG.draw(
+                    player.spriteSheetJumpBow[math.floor(currentSpriteJumpBow)],
+                    player.x,
+                    player.y,
+                    0,
+                    1,
+                    1,
+                    player.spriteSheetJumpBow[1]:getWidth() / 2,
+                    player.spriteSheetJumpBow[1]:getHeight() / 2
+                )
+            end
+    
+            if LM.isDown(1) then
+                LG.draw(
+                    player.spriteSheetAttackBow[math.floor(currentSpriteAttackBow)],
+                    player.x,
+                    player.y,
+                    0,
+                    1,
+                    1,
+                    player.spriteSheetAttackBow[1]:getWidth() / 2,
+                    player.spriteSheetAttackBow[1]:getHeight() / 2
+                )
+            end
+        end 
+    end  
 end
 
 function LoadPlayerImages()
@@ -575,7 +590,7 @@ function RunThroughImages(dt)
     -- Animação de Morte
     currentSpriteDie = currentSpriteDie + 10 * dt
     if currentSpriteDie >= 9 then
-        currentSpriteDie = 1
+        currentSpriteDie = 9
     end
     
     -- Animações com arco
@@ -693,10 +708,25 @@ function MenuButtons()
     suit.Label("Dragões do Submundo", (LG.getWidth() / 2) - 100,100, 200,30)
     
     if suit.Button("Iniciar História", {id=1}, suit.layout:row(500,50)).hit then
-      fase = 1
+        fase = 1
     end
     
     if suit.Button("Sair", {id=2}, suit.layout:row()).hit then
         love.event.quit()
+    end
+end
+
+function restartGame()
+    suit.layout:reset((player.x - deadFont:getWidth('Morreu')) - 100, (LG.getHeight() - (deadFont:getHeight('Morreu') - 300)) / 2)    
+    if suit.Button("Recomeçar", {id=3}, suit.layout:row(200,50)).hit then
+        fase = 1
+        playerLife = 5        
+        player.x = 100 
+        player.y = 575         
+        player.collider = world:destroy()
+        world = wf.newWorld(0, 9.81 * 4000, true)
+        player.collider = world:newBSGRectangleCollider(150, 575, 100, 130, 10)
+        player.collider:setFixedRotation(true)
+        RenderMap()
     end
 end
