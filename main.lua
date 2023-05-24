@@ -187,7 +187,8 @@ function love.draw()
         if playerLife == 1 then                                                          
             LG.setFont(deadFont)                
             LG.setColor(255, 255, 255)     
-            LG.print('Morreu', (player.x - deadFont:getWidth('Morreu')) - 150, (LG.getHeight() - deadFont:getHeight('Morreu')) / 2)                 
+            --LG.print('Morreu', (player.x - deadFont:getWidth('Morreu')) - 150, (LG.getHeight() - deadFont:getHeight('Morreu')) / 2)                 
+            LG.print('Morreu', 570, 300)                 
             LG.setFont(gameFont)        
             suit.draw() -- Renderiza o botão de reiniciar              
         end
@@ -717,7 +718,8 @@ function MenuButtons()
 end
 
 function restartGame()
-    suit.layout:reset((player.x - deadFont:getWidth('Morreu')) - 100, (LG.getHeight() - (deadFont:getHeight('Morreu') - 300)) / 2)    
+    --suit.layout:reset((player.x - deadFont:getWidth('Morreu')) - 100, (LG.getHeight() - (deadFont:getHeight('Morreu') - 300)) / 2)    
+    suit.layout:reset(650, 500)
     if suit.Button("Recomeçar", {id=3}, suit.layout:row(200,50)).hit then
         fase = 1
         playerLife = 5        
