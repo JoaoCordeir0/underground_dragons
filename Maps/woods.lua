@@ -9,8 +9,8 @@ return {
   height = 12,
   tilewidth = 64,
   tileheight = 64,
-  nextlayerid = 11,
-  nextobjectid = 27,
+  nextlayerid = 12,
+  nextobjectid = 30,
   properties = {},
   tilesets = {
     {
@@ -261,6 +261,61 @@ return {
           y = -2,
           width = 9,
           height = 642,
+          rotation = 0,
+          visible = true,
+          properties = {}
+        }
+      }
+    },
+    {
+      type = "objectgroup",
+      draworder = "topdown",
+      id = 11,
+      name = "Espinhos",
+      class = "",
+      visible = true,
+      opacity = 1,
+      offsetx = 0,
+      offsety = 0,
+      parallaxx = 1,
+      parallaxy = 1,
+      properties = {},
+      objects = {
+        {
+          id = 27,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 1024.67,
+          y = 702,
+          width = 196.667,
+          height = 64.6667,
+          rotation = 0,
+          visible = true,
+          properties = {}
+        },
+        {
+          id = 28,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 1729.67,
+          y = 702.333,
+          width = 196.667,
+          height = 64.6667,
+          rotation = 0,
+          visible = true,
+          properties = {}
+        },
+        {
+          id = 29,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 2241.67,
+          y = 703.667,
+          width = 196.667,
+          height = 64.6667,
           rotation = 0,
           visible = true,
           properties = {}

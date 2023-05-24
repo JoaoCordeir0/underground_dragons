@@ -15,6 +15,9 @@ local wall
 local walls = {}
 local player = {}
 
+local espinho
+local espinhos = {}
+
 -- Variaveis para controlar a barra de vida
 local playerLife = 5
 
@@ -32,6 +35,7 @@ local sti
 local currentSpriteRun
 local currentSpriteIdle
 local currentSpriteJump
+local currentSpriteDie
 
 local currentSpriteRunBow
 local currentSpriteIdleBow
@@ -83,10 +87,12 @@ function love.load()
     player.spriteSheetRun = {}-- Tabela de animacao do personagem andando
     player.spriteSheetIdle = {}-- Tabela de animacao do personagem parado
     player.spriteSheetJump = {}-- Tabela de animacao do personagem pulando
+    player.spriteSheetDie = {}-- Tabela de animacao do personagem morrendo
     -- Personagem com arco
     player.spriteSheetRunBow = {}-- Tabela de animacao do personagem andando com arco
     player.spriteSheetIdleBow = {}-- Tabela de animacao do personagem parado com arco
     player.spriteSheetJumpBow = {}-- Tabela de animacao do personagem pulando com arco
+    player.spriteSheetAttackBow = {}-- Tabela de animacao do personagem atirando com arco
     
     -- Informações da posição inicial do player
     player.x = 100
@@ -108,10 +114,12 @@ function love.load()
     currentSpriteRun = 1
     currentSpriteIdle = 1
     currentSpriteJump = 1
+    currentSpriteDie = 1
     -- Sprite atual/inicial com arco
     currentSpriteRunBow = 1
     currentSpriteIdleBow = 1
     currentSpriteJumpBow = 1
+    currentSpriteAttackBow = 1
     
     -- Posição, tamanho do checkpoint de troca de mapa
     woodsCheckPoint.x = 3750
@@ -156,6 +164,8 @@ function love.draw()
         for i, actual in pairs(shots) do        
             LG.draw(actual.img, actual.x, actual.y)
         end
+
+       
     cam:detach()    
 
     -- Timer do jogo
@@ -282,6 +292,14 @@ function RenderMap()
                 table.insert(walls, wall)
             end
         end
+
+        if gameMapWoods.layers['Espinhos'] then
+            for i, obj in pairs(gameMapWoods.layers['Espinhos'].objects) do
+                espinho = world:newRectangleCollider(obj.x, obj.y, obj.width, obj.height)
+                espinho:setType('static')
+                table.insert(espinhos, espinho)
+            end
+        end
     elseif fase == 2 then
         if gameMapCave.layers['Chao'] then
             for i, obj in pairs(gameMapCave.layers['Chao'].objects) do
@@ -312,7 +330,7 @@ function RenderPlayer()
                 1,
                 player.spriteSheetIdle[1]:getWidth() / 2,
                 player.spriteSheetIdle[1]:getHeight() / 2
-        )
+            )
         end
         
         -- Animação de correr
@@ -390,9 +408,21 @@ function RenderPlayer()
                 1,
                 player.spriteSheetJumpBow[1]:getWidth() / 2,
                 player.spriteSheetJumpBow[1]:getHeight() / 2
+            )
+        end    
+    end
+
+    if playerLife == 1 then
+        LG.draw(
+            player.spriteSheetDie[math.floor(currentSpriteDie)],
+            player.x,
+            player.y,
+            0,
+            1,
+            1,
+            player.spriteSheetDie[1]:getWidth() / 2,
+            player.spriteSheetDie[1]:getHeight() / 2
         )
-        end
-    
     end
 -- Animação de parado
 end
@@ -451,6 +481,23 @@ function LoadPlayerImages()
     -- Animação de Pular com Arco
     table.insert(player.spriteSheetJumpBow, LG.newImage('Insumos/PlayerBow/jump/player_bow_fall.png'))
     table.insert(player.spriteSheetJumpBow, LG.newImage('Insumos/PlayerBow/jump/player_bow_rise.png'))
+
+    -- Animação de Atacar com Arco
+    table.insert(player.spriteSheetAttackBow, LG.newImage('Insumos/PlayerBow/attack/player_bow_attack_00.png'))
+    table.insert(player.spriteSheetAttackBow, LG.newImage('Insumos/PlayerBow/attack/player_bow_attack_01.png'))
+    table.insert(player.spriteSheetAttackBow, LG.newImage('Insumos/PlayerBow/attack/player_bow_attack_02.png'))
+    table.insert(player.spriteSheetAttackBow, LG.newImage('Insumos/PlayerBow/attack/player_bow_attack_03.png'))
+    table.insert(player.spriteSheetAttackBow, LG.newImage('Insumos/PlayerBow/attack/player_bow_attack_04.png'))
+    table.insert(player.spriteSheetAttackBow, LG.newImage('Insumos/PlayerBow/attack/player_bow_attack_05.png'))
+    table.insert(player.spriteSheetAttackBow, LG.newImage('Insumos/PlayerBow/attack/player_bow_attack_06.png'))
+    table.insert(player.spriteSheetAttackBow, LG.newImage('Insumos/PlayerBow/attack/player_bow_attack_07.png'))
+    table.insert(player.spriteSheetAttackBow, LG.newImage('Insumos/PlayerBow/attack/player_bow_attack_08.png'))
+    table.insert(player.spriteSheetAttackBow, LG.newImage('Insumos/PlayerBow/attack/player_bow_attack_09.png'))
+    table.insert(player.spriteSheetAttackBow, LG.newImage('Insumos/PlayerBow/attack/player_bow_attack_10.png'))
+    table.insert(player.spriteSheetAttackBow, LG.newImage('Insumos/PlayerBow/attack/player_bow_attack_11.png'))
+    table.insert(player.spriteSheetAttackBow, LG.newImage('Insumos/PlayerBow/attack/player_bow_attack_12.png'))
+    table.insert(player.spriteSheetAttackBow, LG.newImage('Insumos/PlayerBow/attack/player_bow_attack_13.png'))
+    table.insert(player.spriteSheetAttackBow, LG.newImage('Insumos/PlayerBow/attack/player_bow_attack_14.png'))
     
     -- Barra de vida do personagem
     table.insert(player.spriteHealthBar, LG.newImage('Insumos/Player/healthbar/healthBar1.png'))
@@ -458,6 +505,17 @@ function LoadPlayerImages()
     table.insert(player.spriteHealthBar, LG.newImage('Insumos/Player/healthbar/healthBar3.png'))
     table.insert(player.spriteHealthBar, LG.newImage('Insumos/Player/healthbar/healthBar4.png'))
     table.insert(player.spriteHealthBar, LG.newImage('Insumos/Player/healthbar/healthBar5.png'))
+
+    -- Animação de Morte
+    table.insert(player.spriteSheetDie, LG.newImage('Insumos/Player/die/player_die_00.png'))
+    table.insert(player.spriteSheetDie, LG.newImage('Insumos/Player/die/player_die_01.png'))
+    table.insert(player.spriteSheetDie, LG.newImage('Insumos/Player/die/player_die_02.png'))
+    table.insert(player.spriteSheetDie, LG.newImage('Insumos/Player/die/player_die_03.png'))
+    table.insert(player.spriteSheetDie, LG.newImage('Insumos/Player/die/player_die_04.png'))
+    table.insert(player.spriteSheetDie, LG.newImage('Insumos/Player/die/player_die_05.png'))
+    table.insert(player.spriteSheetDie, LG.newImage('Insumos/Player/die/player_die_06.png'))
+    table.insert(player.spriteSheetDie, LG.newImage('Insumos/Player/die/player_die_07.png'))
+    table.insert(player.spriteSheetDie, LG.newImage('Insumos/Player/die/player_die_08.png'))
 end
 
 function RunThroughImages(dt)
@@ -480,6 +538,12 @@ function RunThroughImages(dt)
     if currentSpriteJump >= 2 then
         currentSpriteJump = 1
     end
+
+    -- Animação de Morte
+    currentSpriteDie = currentSpriteDie + 10 * dt
+    if currentSpriteDie >= 9 then
+        currentSpriteDie = 1
+    end
     
     -- Animações com arco
     -- Animação Corrida com arco
@@ -489,13 +553,21 @@ function RunThroughImages(dt)
     end
     
     -- Animação Parado com arco
+    currentSpriteIdleBow = currentSpriteIdleBow + 10 * dt
     if currentSpriteIdleBow >= 8 then
         currentSpriteIdleBow = 1
     end
     
     -- Animação Pulo com arco
+    currentSpriteJumpBow = currentSpriteJumpBow + 10 * dt
     if currentSpriteJumpBow >= 2 then
         currentSpriteJumpBow = 1
+    end
+
+    -- Animação Ataque com arco
+    currentSpriteAttackBow = currentSpriteAttackBow + 10 * dt
+    if currentSpriteAttackBow >= 15 then
+        currentSpriteAttackBow = 1
     end
 end
 
