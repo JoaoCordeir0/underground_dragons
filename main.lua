@@ -186,8 +186,7 @@ function love.draw()
        
         if playerLife == 1 then                                                          
             LG.setFont(deadFont)                
-            LG.setColor(255, 255, 255)     
-            --LG.print('Morreu', (player.x - deadFont:getWidth('Morreu')) - 150, (LG.getHeight() - deadFont:getHeight('Morreu')) / 2)                 
+            LG.setColor(255, 255, 255)                       
             LG.print('Morreu', 570, 300)                 
             LG.setFont(gameFont)        
             suit.draw() -- Renderiza o botão de reiniciar              
@@ -307,6 +306,8 @@ function love.keypressed(k)
     elseif k == 'z' then
         arma = 'arco'
         RenderPlayer()
+    elseif k == 'c' then
+        arma = 'espada'            
     end
     
     if k == '0' then
@@ -630,7 +631,9 @@ end
 
 function weaponInUse()
     if arma == 'arco' then
-        return LG.draw(LG.newImage('Insumos/Objeto/weapon_bow.png'), 300, 5)
+        return LG.draw(LG.newImage('Insumos/Objeto/icon_bow.png'), 290, 7)
+    elseif arma == 'espada' then
+        return LG.draw(LG.newImage('Insumos/Objeto/icon_sword.png'), 290, 7)
     end
 end
 
@@ -717,8 +720,7 @@ function MenuButtons()
     end
 end
 
-function restartGame()
-    --suit.layout:reset((player.x - deadFont:getWidth('Morreu')) - 100, (LG.getHeight() - (deadFont:getHeight('Morreu') - 300)) / 2)    
+function restartGame()    
     suit.layout:reset(650, 500)
     if suit.Button("Recomeçar", {id=3}, suit.layout:row(200,50)).hit then
         fase = 1
