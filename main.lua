@@ -1,6 +1,6 @@
 -- Classes
 require('Classes.player')
-require('Classes.map')
+require('Classes.menu')
 require('Classes.colission')
 require('Classes.timer')
 
@@ -16,9 +16,9 @@ local backgroundMenu
 
 -- Classe do Player, Mapa e Colisão
 local playerClass = nil
-local mapClass = nil
 local colissionClass = nil
 local timerClass = nil
+local menuClass = nil
 
 -- Variavel de controle do tempo do jogo
 local showTimer = "0:00"
@@ -32,6 +32,10 @@ local player = {}
 -- Variaveis para tratar o mundo
 local fase = 0 --[[Fase: 0 - Menu Inicial | 1 - Woods Map | 2 - Cave Map]]
 local world
+local espinho
+local espinhos = {}
+local wall
+local walls = {}
 
 -- Variaveis para tratar as bibliotecas
 local camera = require 'libraries/camera'
@@ -72,9 +76,6 @@ function love.load()
     -- Adiciona minha biblioteca de colisão
     world = wf.newWorld(0, 9.81 * 4000, true)
 
-    -- Instância da classe do Mapa
-    mapClass = ClasseMap.new(world)
-
     -- Instância da classe do Player
     playerClass = ClassePlayer.new(player)
 
@@ -83,6 +84,9 @@ function love.load()
     
     -- Instância da classe de timer
     timerClass = ClasseTimer.new()
+
+    -- Instância da classe do menu
+    menuClass = ClasseMenu.new()
 
     -- Adiciona minha biblioteca de camera
     cam = camera()
@@ -149,7 +153,7 @@ function love.load()
     arco.size = 100
     
     -- Carrega o Mapa
-    mapClass.RenderMap(fase, gameMapWoods, gameMapCave)    
+    RenderMap()    
 end
 
 function love.draw()
@@ -217,7 +221,7 @@ end
 
 function love.update(dt)    
     if fase == 0 then
-        MenuButtons()    
+        fase = menuClass.MenuButtons(suit)    
     elseif fase > 0 and player.life == 1 then
         restartGame()        
     elseif fase > 0 and player.life > 1 then
@@ -284,7 +288,7 @@ function love.update(dt)
             world = wf.newWorld(0, 9.81 * 4000, true)
             player.collider = world:newBSGRectangleCollider(150, 575, 100, 130, 10)
             player.collider:setFixedRotation(true)
-            mapClass.RenderMap(fase, gameMapWoods, gameMapCave)    
+            RenderMap()    
         end
         
         -- Controle de disparos
@@ -293,18 +297,6 @@ function love.update(dt)
 end
 
 function love.keypressed(k)
-    if k == '1' then
-        -- Fase a ser exibida
-        fase = 1
-        -- Aqui vou limpar o antigo mundo criado
-        -- E cria-lo novamente
-        player.collider = world:destroy()
-        world = wf.newWorld(0, 9.81 * 4000, true)
-        player.collider = world:newBSGRectangleCollider(150, 575, 100, 130, 10)
-        player.collider:setFixedRotation(true)
-        mapClass.RenderMap(fase, gameMapWoods, gameMapCave)    
-    end
-    
     if k == 'x' then
         player.arma = 'hand'
         playerClass.RenderPlayer()
@@ -322,6 +314,36 @@ function love.keypressed(k)
             player.life = 5
         end
     end    
+end
+
+-- Função responsavel por renderizar o mapa
+function RenderMap()
+    -- Função que carrega as colisões do mapa
+    if fase == 1 or fase == 0 then
+        if gameMapWoods.layers['Chao'] then
+            for i, obj in pairs(gameMapWoods.layers['Chao'].objects) do
+                wall = world:newRectangleCollider(obj.x, obj.y, obj.width, obj.height)
+                wall:setType('static')
+                table.insert(walls, wall)
+            end
+        end
+
+        if gameMapWoods.layers['Espinhos'] then
+            for i, obj in pairs(gameMapWoods.layers['Espinhos'].objects) do
+                espinho = world:newRectangleCollider(obj.x, obj.y, obj.width, obj.height)
+                espinho:setType('static')
+                table.insert(espinhos, espinho)
+            end
+        end
+    elseif fase == 2 or fase == 0 then
+        if gameMapCave.layers['Chao'] then
+            for i, obj in pairs(gameMapCave.layers['Chao'].objects) do
+                wall = world:newRectangleCollider(obj.x, obj.y, obj.width, obj.height)
+                wall:setType('static')
+                table.insert(walls, wall)
+            end
+        end
+    end
 end
 
 function controlShots(dt)
@@ -366,20 +388,6 @@ function controlShots(dt)
     end
 end
 
-function MenuButtons()
-    suit.layout:reset((LG.getWidth() / 2) - 250,(LG.getHeight() / 2) - 50)
-    suit.layout:padding(10)
-    suit.Label("Dragões do Submundo", (LG.getWidth() / 2) - 100,100, 200,30)
-    
-    if suit.Button("Iniciar História", {id=1}, suit.layout:row(500,50)).hit then
-        fase = 1
-    end
-    
-    if suit.Button("Sair", {id=2}, suit.layout:row()).hit then
-        love.event.quit()
-    end
-end
-
 -- Função responsável por reiniciar o jogo quando o jogador morrer
 function restartGame()    
     suit.layout:reset(650, 500)
@@ -392,6 +400,6 @@ function restartGame()
         world = wf.newWorld(0, 9.81 * 4000, true)
         player.collider = world:newBSGRectangleCollider(150, 575, 100, 130, 10)
         player.collider:setFixedRotation(true)
-        mapClass.RenderMap(fase, gameMapWoods, gameMapCave)                
+        RenderMap()                
     end
 end
