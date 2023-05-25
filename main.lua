@@ -146,7 +146,7 @@ function love.load()
     player.currentSpriteAttackSword = 1
 
     -- Informações da posição inicial do player
-    player.life = 5
+    player.life = 6
     player.arma = 'hand'
     player.x = 100
     player.y = 575
@@ -331,7 +331,7 @@ function love.update(dt)
         
         -- Testa colisão da troca de mapas / Fase 1 para Fase 2
         if colissionClass.HaveColission(player, woodsCheckPoint) and fase == 1 then
-            fase = 3
+            fase = 2
             player.collider = world:destroy()
             world = wf.newWorld(0, 9.81 * 4000, true)
             player.collider = world:newBSGRectangleCollider(150, 575, 100, 130, 10)
@@ -369,7 +369,7 @@ function love.keypressed(k)
         if player.life > 1 then
             player.life = player.life - 1
         else
-            player.life = 5
+            player.life = 6
         end
     end    
 end
@@ -459,7 +459,7 @@ function restartGame()
     suit.layout:reset(650, 500)
     if suit.Button("Recomeçar", {id=3}, suit.layout:row(200,50)).hit then
         fase = 1
-        player.life = 5
+        player.life = 6
         player.x = 100
         player.y = 575
         player.collider = world:destroy()

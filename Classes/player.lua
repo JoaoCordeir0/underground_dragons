@@ -400,6 +400,7 @@ ClassePlayer.new = function(player)
         table.insert(player.spriteHealthBar, LG.newImage('Insumos/Player/healthbar/healthBar3.png'))
         table.insert(player.spriteHealthBar, LG.newImage('Insumos/Player/healthbar/healthBar4.png'))
         table.insert(player.spriteHealthBar, LG.newImage('Insumos/Player/healthbar/healthBar5.png'))
+        table.insert(player.spriteHealthBar, LG.newImage('Insumos/Player/healthbar/healthBar6.png'))
 
         -- Animação de Morte
         table.insert(player.spriteSheetDie, LG.newImage('Insumos/Player/die/player_die_00.png'))
