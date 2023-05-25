@@ -13,6 +13,7 @@ local LM = love.mouse
 -- Variavel para o menu
 local suit = require 'libraries/suit'
 local backgroundMenu
+local video
 
 -- Classe do Player, Mapa e Colisão
 local playerClass = nil
@@ -31,7 +32,7 @@ local wf = require 'libraries/windfield'
 local player = {}
 
 -- Variaveis para tratar o mundo
-local fase = 0 --[[Fase: 0 - Menu Inicial | 1 - Woods Map | 2 - Cave Map]]
+local fase = 4 --[[Fase: 0 - Menu Inicial | 1 - Woods Map | 2 - Cave Map]]
 local world
 local espinho
 local espinhos = {}
@@ -83,6 +84,10 @@ function love.load()
     deadFont = LG.newFont('Insumos/Fonts/RetroMario-Regular.otf', 100)
     
     LG.setFont(gameFont)
+
+    -- Adiciona video de abertura
+    video = LG.newVideo('Insumos/Videos/LogoPedregasAudio.ogv')
+    video:play()
 
     -- Adiciona meu background no menu
     backgroundMenu = LG.newImage('Insumos/Menu/backgroundMenu.jpg')
@@ -259,6 +264,12 @@ function love.draw()
     end if fase == 0 then
         LG.draw(backgroundMenu, 0 ,0)
         suit.draw()
+    elseif fase == 4 then
+        LG.draw(video, -200,-200)
+        
+        if not video:isPlaying() then
+            fase = 0
+        end
     end
 
 end
@@ -489,6 +500,9 @@ function restartGame()
         player.life = 6
         player.x = 100
         player.y = 575
+        player.arma = 'hand'
+        haveBow = false
+        haveSword = false
         player.collider = world:destroy()
         world = wf.newWorld(0, 9.81 * 4000, true)
         player.collider = world:newBSGRectangleCollider(150, 575, 100, 130, 10)
