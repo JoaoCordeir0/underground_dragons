@@ -3,7 +3,8 @@ local LK = love.keyboard
 local LM = love.mouse
 
 -- Timers para controlar os danos de inimigos
-local activateMax = 1.5
+local damageTrue = true
+local activateMax = 1.1
 local timeDamage = activateMax
 
 ClassePlayer = {}
@@ -12,6 +13,19 @@ ClassePlayer.new = function(player)
     local self = self or {}
 
     self.player = player
+
+    self.playerDamage = function(dt)
+        timeDamage = timeDamage - (1 * dt)
+        if timeDamage < 0 then
+            damageTrue = true
+        end
+                        
+        if damageTrue then
+            player.life = player.life - 1
+            damageTrue = false
+            timeDamage = activateMax
+        end          
+    end
 
     -- Renderiza e executa animações do personagem
     self.RenderPlayer = function()

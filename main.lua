@@ -32,7 +32,7 @@ local wf = require 'libraries/windfield'
 local player = {}
 
 -- Variaveis para tratar o mundo
-local fase = 4 --[[Fase: 0 - Menu Inicial | 1 - Woods Map | 2 - Cave Map]]
+local fase = -1 --[[Fase: 0 - Menu Inicial | 1 - Woods Map | 2 - Cave Map]]
 local world
 local espinho
 local espinhos = {}
@@ -70,15 +70,13 @@ local shotTrue = true
 local activateMax = 1.5
 local timeShot = activateMax
 
--- Timers para controlar os danos de inimigos
-local damageTrue = true
-local timeDamage = activateMax
-
 -- Fontes do jogo
 local gameFont
 local deadFont
 
 function love.load()
+    -- love.window.setFullscreen(true, "desktop")
+
     -- Fonte
     gameFont = LG.newFont('Insumos/Fonts/RetroMario-Regular.otf', 18)
     deadFont = LG.newFont('Insumos/Fonts/RetroMario-Regular.otf', 100)
@@ -261,17 +259,16 @@ function love.draw()
         LG.print('X -> ' .. player.x, 10, 200)
         LG.print('Y -> ' .. player.y, 10, 220)
 
-    end if fase == 0 then
+    elseif fase == 0 then
         LG.draw(backgroundMenu, 0 ,0)
         suit.draw()
-    elseif fase == 4 then
+    elseif fase == -1 then
         LG.draw(video, -200,-200)
         
         if not video:isPlaying() then
             fase = 0
         end
     end
-
 end
 
 function love.update(dt)    
@@ -342,16 +339,7 @@ function love.update(dt)
             haveBow = true            
 
             -- Teste de perda de vida quando houver colisão
-            timeDamage = timeDamage - (1 * dt)
-            if timeDamage < 0 then
-                damageTrue = true
-            end
-                        
-            if damageTrue then
-                player.life = player.life - 1
-                damageTrue = false
-                timeDamage = activateMax
-            end  
+            playerClass.playerDamage(dt)            
             -- Fim do teste          
         end
 
@@ -386,12 +374,15 @@ function love.update(dt)
 end
 
 function love.keypressed(k)
-    if k == 'escape' then
+    if k == 'escape' or k == 'space' and fase == -1 then
         fase = 0        
         LG.draw(backgroundMenu, 0 ,0)
-        suit.draw()           
+        suit.draw()   
+        if video:isPlaying() then
+            video:pause()   
+        end
     end
-    
+   
     if k == 'x' and haveEmptyHand then
         player.arma = 'hand'
         playerClass.RenderPlayer()
