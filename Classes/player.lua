@@ -89,7 +89,7 @@ ClassePlayer.new = function(player)
                         player.spriteSheetJump[1]:getHeight() / 2
                     )
                 end
-            elseif player.arma == 'arco' then
+            elseif player.arma == 'bow' then
                 if not LK.isDown('right') and
                     not LK.isDown('d') and
                     not LK.isDown('left') and
@@ -298,7 +298,7 @@ ClassePlayer.new = function(player)
     end
 
     self.weaponInUse = function()
-        if player.arma == 'arco' then
+        if player.arma == 'bow' then
             return LG.draw(LG.newImage('Insumos/Objeto/icon_bow.png'), 290, 7)
         elseif player.arma == 'sword' then
             return LG.draw(LG.newImage('Insumos/Objeto/icon_sword.png'), 290, 7)

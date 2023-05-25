@@ -3,6 +3,7 @@ require('Classes.player')
 require('Classes.menu')
 require('Classes.colission')
 require('Classes.timer')
+require('Classes.table')
 
 -- Atalhos
 local LK = love.keyboard
@@ -20,6 +21,7 @@ local playerClass = nil
 local colissionClass = nil
 local timerClass = nil
 local menuClass = nil
+local tableClass = nil
 
 -- Variavel de controle do tempo do jogo
 local showTimer = "0:00"
@@ -50,15 +52,13 @@ local woodsCheckPoint = {}
 local caveCheckPoint = {}
 
 -- Variavel para controlar arma
-local haveEmptyHand = true
+local playerGuns = {'hand'}
 
 -- Variaveis do arco
-local arco = {}
-local haveBow = false
+local bow = {}
 
 -- Variaveis da espada
 local sword = {}
-local haveSword = false
 
 -- Variaveis para controle de disparos
 local veloc = 500
@@ -104,6 +104,9 @@ function love.load()
 
     -- Instância da classe do menu
     menuClass = ClasseMenu.new()
+
+    -- Instância da classe de busca em tabelas ou mais conhecido como array
+    tableClass = ClasseTable.new()
 
     -- Adiciona minha biblioteca de camera
     cam = camera()
@@ -180,10 +183,10 @@ function love.load()
     caveCheckPoint.size = 200
     
     -- Posição, tamanho e imagem do arco
-    arco.x = 1530
-    arco.y = 350
-    arco.img = LG.newImage('Insumos/Objeto/weapon_bow.png')
-    arco.size = 100
+    bow.x = 1530
+    bow.y = 350
+    bow.img = LG.newImage('Insumos/Objeto/weapon_bow.png')
+    bow.size = 100
 
     -- Posição, tamanho e imagem da espada
     sword.x = 1700
@@ -227,7 +230,7 @@ function love.draw()
             playerClass.RenderPlayer()
                 
             if fase == 1 and player.arma == 'hand' and not haveBow then
-                LG.draw(arco.img, arco.x, arco.y)
+                LG.draw(bow.img, bow.x, bow.y)
             end     
 
             if fase == 2 and not haveSword then
@@ -273,7 +276,12 @@ end
 
 function love.update(dt)    
     if fase == 0 then
-        fase = menuClass.MenuButtons(suit)         
+        -- Limpa as armas do player
+        playerGuns = {'hand'}
+        player.arma = 'hand'
+        -- Retorna a fase atual e a fase 1 quando o jogar clicar em inicar história
+        fase = menuClass.MenuButtons(suit)  
+        -- Destroi e constroi a fase 1 do jogo       
         player.collider = world:destroy()
         world = wf.newWorld(0, 9.81 * 4000, true)
         player.collider = world:newBSGRectangleCollider(150, 575, 100, 130, 10)
@@ -334,9 +342,9 @@ function love.update(dt)
         playerClass.RunThroughImages(dt)
         
         -- Colidir com o arco e pega-lo
-        if colissionClass.HaveColission(player, arco) and fase == 1 then
-            player.arma = 'arco'
-            haveBow = true            
+        if colissionClass.HaveColission(player, bow) and fase == 1 then
+            player.arma = 'bow'
+            table.insert(playerGuns, 'bow')         
 
             -- Teste de perda de vida quando houver colisão
             playerClass.playerDamage(dt)            
@@ -346,7 +354,7 @@ function love.update(dt)
         -- Colidir com a espada e pega-la
         if colissionClass.HaveColission(player, sword) and fase == 2 then
             player.arma = 'sword'
-            haveSword = true
+            table.insert(playerGuns, 'sword')         
         end
         
         -- Testa colisão da troca de mapas / Fase 1 para Fase 2
@@ -383,13 +391,13 @@ function love.keypressed(k)
         end
     end
    
-    if k == 'x' and haveEmptyHand then
+    if k == 'x' and tableClass.contains(playerGuns, 'hand') then
         player.arma = 'hand'
         playerClass.RenderPlayer()
-    elseif k == 'z' and haveBow then
-        player.arma = 'arco'
+    elseif k == 'z' and tableClass.contains(playerGuns, 'bow') then
+        player.arma = 'bow'
         playerClass.RenderPlayer()
-    elseif k == 'c' and haveSword then
+    elseif k == 'c' and tableClass.contains(playerGuns, 'sword') then
         player.arma = 'sword'
         playerClass.RenderPlayer()         
     end
@@ -448,7 +456,7 @@ function controlShots(dt)
         shotTrue = true
     end
     -- Controlar o disparo com o mouse
-    if love.mouse.isDown(1) and shotTrue and player.arma == 'arco' then
+    if love.mouse.isDown(1) and shotTrue and player.arma == 'bow' then
         -- Definir a posição do disparo (meio da caixa)
         local X = posShot.x + (posShot.larg / 2)
         local Y = posShot.y + (posShot.alt / 2)  
