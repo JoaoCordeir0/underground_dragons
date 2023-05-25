@@ -2,6 +2,10 @@ local LG = love.graphics
 local LK = love.keyboard
 local LM = love.mouse
 
+-- Timers para controlar os danos de inimigos
+local activateMax = 1.5
+local timeDamage = activateMax
+
 ClassePlayer = {}
 
 ClassePlayer.new = function(player)

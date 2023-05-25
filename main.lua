@@ -59,7 +59,6 @@ local haveBow = false
 local sword = {}
 local haveSword = false
 
-
 -- Variaveis para controle de disparos
 local veloc = 500
 local posShot = {x = 0, y = 0, larg = 50, alt = 50}
@@ -69,6 +68,10 @@ local shots = {}
 local shotTrue = true
 local activateMax = 1.5
 local timeShot = activateMax
+
+-- Timers para controlar os danos de inimigos
+local damageTrue = true
+local timeDamage = activateMax
 
 -- Fontes do jogo
 local gameFont
@@ -262,7 +265,12 @@ end
 
 function love.update(dt)    
     if fase == 0 then
-        fase = menuClass.MenuButtons(suit)    
+        fase = menuClass.MenuButtons(suit)         
+        player.collider = world:destroy()
+        world = wf.newWorld(0, 9.81 * 4000, true)
+        player.collider = world:newBSGRectangleCollider(150, 575, 100, 130, 10)
+        player.collider:setFixedRotation(true)
+        RenderMap()   
     elseif fase > 0 and player.life == 1 then
         restartGame()        
     elseif fase > 0 and player.life > 1 then
@@ -320,7 +328,20 @@ function love.update(dt)
         -- Colidir com o arco e pega-lo
         if colissionClass.HaveColission(player, arco) and fase == 1 then
             player.arma = 'arco'
-            haveBow = true
+            haveBow = true            
+
+            -- Teste de perda de vida quando houver colisão
+            timeDamage = timeDamage - (1 * dt)
+            if timeDamage < 0 then
+                damageTrue = true
+            end
+                        
+            if damageTrue then
+                player.life = player.life - 1
+                damageTrue = false
+                timeDamage = activateMax
+            end  
+            -- Fim do teste          
         end
 
         -- Colidir com a espada e pega-la
@@ -354,6 +375,12 @@ function love.update(dt)
 end
 
 function love.keypressed(k)
+    if k == 'escape' then
+        fase = 0        
+        LG.draw(backgroundMenu, 0 ,0)
+        suit.draw()           
+    end
+    
     if k == 'x' and haveEmptyHand then
         player.arma = 'hand'
         playerClass.RenderPlayer()
