@@ -133,6 +133,70 @@ ClassePlayer.new = function(player)
                         player.spriteSheetAttackBow[1]:getHeight() / 2
                     )
                 end
+            elseif player.arma == 'sword' then
+
+                if not LK.isDown('right') and
+                   not LK.isDown('d') and
+                   not LK.isDown('left') and
+                   not LK.isDown('a') and
+                   not LK.isDown('up') and
+                   not LK.isDown('w') and
+                   not LM.isDown(1) then
+                    LG.draw(
+                        player.spriteSheetIdleSword[math.floor(player.currentSpriteIdleSword)],
+                        player.x,
+                        player.y,
+                        0,
+                        1,
+                        1,
+                        player.spriteSheetIdleSword[1]:getWidth() / 2,
+                        player.spriteSheetIdleSword[1]:getHeight() / 2
+                    )
+                end
+
+                -- Animação de correr
+                if LK.isDown('right') or LK.isDown('d') or LK.isDown('left') or LK.isDown('a') then
+                    if not LK.isDown('up') and not LK.isDown('w') and not LM.isDown(1) then
+                        LG.draw(
+                            player.spriteSheetRunSword[math.floor(player.currentSpriteRunSword)],
+                            player.x,
+                            player.y,
+                            0,
+                            1,
+                            1,
+                            player.spriteSheetRunSword[1]:getWidth() / 2,
+                            player.spriteSheetRunSword[1]:getHeight() / 2
+                        )
+                    end
+                end
+
+                -- Animação de Pular
+                if LK.isDown('up') or LK.isDown('w') then
+                    LG.draw(
+                        player.spriteSheetJumpSword[math.floor(player.currentSpriteJumpSword)],
+                        player.x,
+                        player.y,
+                        0,
+                        1,
+                        1,
+                        player.spriteSheetJumpSword[1]:getWidth() / 2,
+                        player.spriteSheetJumpSword[1]:getHeight() / 2
+                    )
+                end
+
+                if LM.isDown(1) then
+                    LG.draw(
+                        player.spriteSheetAttackSword[math.floor(player.currentSpriteAttackSword)],
+                        player.x,
+                        player.y,
+                        0,
+                        1,
+                        1,
+                        player.spriteSheetAttackSword[1]:getWidth() / 2,
+                        player.spriteSheetAttackSword[1]:getHeight() / 2
+                    )
+                end
+
             end
         end
     end
@@ -188,12 +252,37 @@ ClassePlayer.new = function(player)
         if player.currentSpriteAttackBow >= 15 then
             player.currentSpriteAttackBow = 1
         end
+
+        -- Animações com espada
+        -- Animação Corrida com espada
+        player.currentSpriteRunSword = player.currentSpriteRunSword + 10 * dt
+        if player.currentSpriteRunSword >= 10 then
+            player.currentSpriteRunSword = 1
+        end
+
+        -- Animação Parado com espada
+        player.currentSpriteIdleSword = player.currentSpriteIdleSword + 10 * dt
+        if player.currentSpriteIdleSword >= 8 then
+            player.currentSpriteIdleSword = 1
+        end
+
+        -- Animação Pulo com espada
+        player.currentSpriteJumpSword = player.currentSpriteJumpSword + 10 * dt
+        if player.currentSpriteJumpSword >= 2 then
+            player.currentSpriteJumpSword = 1
+        end
+
+        -- Animação Ataque com espada
+        player.currentSpriteAttackSword = player.currentSpriteAttackSword + 10 * dt
+        if player.currentSpriteAttackSword >= 8 then
+            player.currentSpriteAttackSword = 1
+        end
     end
 
     self.weaponInUse = function()
         if player.arma == 'arco' then
             return LG.draw(LG.newImage('Insumos/Objeto/icon_bow.png'), 290, 7)
-        elseif player.arma == 'espada' then
+        elseif player.arma == 'sword' then
             return LG.draw(LG.newImage('Insumos/Objeto/icon_sword.png'), 290, 7)
         end
     end
@@ -268,6 +357,42 @@ ClassePlayer.new = function(player)
         table.insert(player.spriteSheetAttackBow, LG.newImage('Insumos/PlayerBow/attack/player_bow_attack_12.png'))
         table.insert(player.spriteSheetAttackBow, LG.newImage('Insumos/PlayerBow/attack/player_bow_attack_13.png'))
         table.insert(player.spriteSheetAttackBow, LG.newImage('Insumos/PlayerBow/attack/player_bow_attack_14.png'))
+
+        -- Animação de Correr com Espada
+        table.insert(player.spriteSheetRunSword, LG.newImage('Insumos/PlayerSword/run/player_sword_run_00.png'))
+        table.insert(player.spriteSheetRunSword, LG.newImage('Insumos/PlayerSword/run/player_sword_run_01.png'))
+        table.insert(player.spriteSheetRunSword, LG.newImage('Insumos/PlayerSword/run/player_sword_run_02.png'))
+        table.insert(player.spriteSheetRunSword, LG.newImage('Insumos/PlayerSword/run/player_sword_run_03.png'))
+        table.insert(player.spriteSheetRunSword, LG.newImage('Insumos/PlayerSword/run/player_sword_run_04.png'))
+        table.insert(player.spriteSheetRunSword, LG.newImage('Insumos/PlayerSword/run/player_sword_run_05.png'))
+        table.insert(player.spriteSheetRunSword, LG.newImage('Insumos/PlayerSword/run/player_sword_run_06.png'))
+        table.insert(player.spriteSheetRunSword, LG.newImage('Insumos/PlayerSword/run/player_sword_run_07.png'))
+        table.insert(player.spriteSheetRunSword, LG.newImage('Insumos/PlayerSword/run/player_sword_run_08.png'))
+        table.insert(player.spriteSheetRunSword, LG.newImage('Insumos/PlayerSword/run/player_sword_run_09.png'))
+
+        -- Animação de ficar Parado com Espada
+        table.insert(player.spriteSheetIdleSword, LG.newImage('Insumos/PlayerSword/idle/player_sword_idle_0.png'))
+        table.insert(player.spriteSheetIdleSword, LG.newImage('Insumos/PlayerSword/idle/player_sword_idle_1.png'))
+        table.insert(player.spriteSheetIdleSword, LG.newImage('Insumos/PlayerSword/idle/player_sword_idle_2.png'))
+        table.insert(player.spriteSheetIdleSword, LG.newImage('Insumos/PlayerSword/idle/player_sword_idle_3.png'))
+        table.insert(player.spriteSheetIdleSword, LG.newImage('Insumos/PlayerSword/idle/player_sword_idle_4.png'))
+        table.insert(player.spriteSheetIdleSword, LG.newImage('Insumos/PlayerSword/idle/player_sword_idle_5.png'))
+        table.insert(player.spriteSheetIdleSword, LG.newImage('Insumos/PlayerSword/idle/player_sword_idle_6.png'))
+        table.insert(player.spriteSheetIdleSword, LG.newImage('Insumos/PlayerSword/idle/player_sword_idle_7.png'))
+
+        -- Animação de Pular com Espada
+        table.insert(player.spriteSheetJumpSword, LG.newImage('Insumos/PlayerSword/jump/player_sword_fall.png'))
+        table.insert(player.spriteSheetJumpSword, LG.newImage('Insumos/PlayerSword/jump/player_sword_rise.png'))
+
+        -- Animação de Atacar com Espada
+        table.insert(player.spriteSheetAttackSword, LG.newImage('Insumos/PlayerSword/attack_1/player_sword_attack1_0.png'))
+        table.insert(player.spriteSheetAttackSword, LG.newImage('Insumos/PlayerSword/attack_1/player_sword_attack1_1.png'))
+        table.insert(player.spriteSheetAttackSword, LG.newImage('Insumos/PlayerSword/attack_1/player_sword_attack1_2.png'))
+        table.insert(player.spriteSheetAttackSword, LG.newImage('Insumos/PlayerSword/attack_1/player_sword_attack1_3.png'))
+        table.insert(player.spriteSheetAttackSword, LG.newImage('Insumos/PlayerSword/attack_1/player_sword_attack1_4.png'))
+        table.insert(player.spriteSheetAttackSword, LG.newImage('Insumos/PlayerSword/attack_1/player_sword_attack1_5.png'))
+        table.insert(player.spriteSheetAttackSword, LG.newImage('Insumos/PlayerSword/attack_1/player_sword_attack1_6.png'))
+        table.insert(player.spriteSheetAttackSword, LG.newImage('Insumos/PlayerSword/attack_1/player_sword_attack1_7.png'))
 
         -- Barra de vida do personagem
         table.insert(player.spriteHealthBar, LG.newImage('Insumos/Player/healthbar/healthBar1.png'))

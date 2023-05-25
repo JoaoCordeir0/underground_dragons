@@ -26,6 +26,7 @@ local showTimer = "0:00"
 -- Variaveis para tratar colisão do mapa e personagem
 local gameMapWoods
 local gameMapCave
+local gameMapCastle
 local wf = require 'libraries/windfield'
 local player = {}
 
@@ -45,9 +46,19 @@ local sti = require 'libraries/sti'
 
 -- Variavel para setar chechpoint de troca de mapa
 local woodsCheckPoint = {}
+local caveCheckPoint = {}
 
 -- Variavel para controlar arma
+local haveEmptyHand = true
+
+-- Variaveis do arco
 local arco = {}
+local haveBow = false
+
+-- Variaveis da espada
+local sword = {}
+local haveSword = false
+
 
 -- Variaveis para controle de disparos
 local veloc = 500
@@ -95,6 +106,7 @@ function love.load()
     -- Assim criar a fase selecionada
     gameMapWoods = sti('maps/woods.lua')
     gameMapCave = sti('maps/cave.lua')
+    gameMapCastle = sti('maps/castle.lua')
     
     -- Carrega o Personagem
     -- Vida do personagem
@@ -109,6 +121,11 @@ function love.load()
     player.spriteSheetIdleBow = {} -- Tabela de animacao do personagem parado com arco
     player.spriteSheetJumpBow = {} -- Tabela de animacao do personagem pulando com arco
     player.spriteSheetAttackBow = {} -- Tabela de animacao do personagem atirando com arco
+    -- Personagem com espada
+    player.spriteSheetRunSword = {} -- Tabela de animacao do personagem andando com espada
+    player.spriteSheetIdleSword = {} -- Tabela de animacao do personagem parado com espada
+    player.spriteSheetJumpSword = {} -- Tabela de animacao do personagem pulando com espada
+    player.spriteSheetAttackSword = {} -- Tabela de animacao do personagem atacando com espada
     
     -- Sprite atual/inicial sem arma
     player.currentSpriteRun = 1
@@ -121,6 +138,12 @@ function love.load()
     player.currentSpriteIdleBow = 1
     player.currentSpriteJumpBow = 1
     player.currentSpriteAttackBow = 1
+
+    -- Sprite atual/inicial com espada
+    player.currentSpriteRunSword = 1
+    player.currentSpriteIdleSword = 1
+    player.currentSpriteJumpSword = 1
+    player.currentSpriteAttackSword = 1
 
     -- Informações da posição inicial do player
     player.life = 5
@@ -145,12 +168,22 @@ function love.load()
     woodsCheckPoint.x = 3750
     woodsCheckPoint.y = 500
     woodsCheckPoint.size = 200
+
+    caveCheckPoint.x = 3750
+    caveCheckPoint.y = 500
+    caveCheckPoint.size = 200
     
     -- Posição, tamanho e imagem do arco
     arco.x = 1530
     arco.y = 350
     arco.img = LG.newImage('Insumos/Objeto/weapon_bow.png')
     arco.size = 100
+
+    -- Posição, tamanho e imagem da espada
+    sword.x = 1700
+    sword.y = 100
+    sword.img = LG.newImage('Insumos/Objeto/weapon_sword.png')
+    sword.size = 100
     
     -- Carrega o Mapa
     RenderMap()    
@@ -178,14 +211,22 @@ function love.draw()
                 gameMapCave:drawLayer(gameMapCave.layers["Camada de Blocos 1"])
                 gameMapCave:drawLayer(gameMapCave.layers["caverna"])
                 gameMapCave:drawLayer(gameMapCave.layers["Camada de Blocos 5"])
+            elseif fase == 3 then
+                gameMapCastle.drawLayer(gameMapCastle.layers["Camada de Blocos 6"])
+                gameMapCastle.drawLayer(gameMapCastle.layers["Camada de Blocos 1"])
+                gameMapCastle.drawLayer(gameMapCastle.layers["Camada de Blocos 5"])
             end
                 
             -- Executa animação do personagem
             playerClass.RenderPlayer()
                 
-            if fase == 1 and player.arma == 'hand' then
+            if fase == 1 and player.arma == 'hand' and not haveBow then
                 LG.draw(arco.img, arco.x, arco.y)
             end     
+
+            if fase == 2 and not haveSword then
+                LG.draw(sword.img, sword.x, sword.y)
+            end
             
             for i, actual in pairs(shots) do        
                 LG.draw(actual.img, actual.x, actual.y)
@@ -276,20 +317,36 @@ function love.update(dt)
         -- Percorre as imagens gerando a animação
         playerClass.RunThroughImages(dt)
         
-        -- Colidir com arco e pegar arco
-        if colissionClass.HaveColission(player, arco) then
+        -- Colidir com o arco e pega-lo
+        if colissionClass.HaveColission(player, arco) and fase == 1 then
             player.arma = 'arco'
+            haveBow = true
+        end
+
+        -- Colidir com a espada e pega-la
+        if colissionClass.HaveColission(player, sword) and fase == 2 then
+            player.arma = 'sword'
+            haveSword = true
         end
         
         -- Testa colisão da troca de mapas / Fase 1 para Fase 2
-        if colissionClass.HaveColission(player, woodsCheckPoint) then
-            fase = 2
+        if colissionClass.HaveColission(player, woodsCheckPoint) and fase == 1 then
+            fase = 3
             player.collider = world:destroy()
             world = wf.newWorld(0, 9.81 * 4000, true)
             player.collider = world:newBSGRectangleCollider(150, 575, 100, 130, 10)
             player.collider:setFixedRotation(true)
-            RenderMap()    
+            RenderMap()
         end
+
+        --[[if colissionClass.HaveColission(player, caveCheckPoint) and fase == 2 then
+            fase = 3
+            player.collider = world:destroy()
+            world = wf.newWorld(0, 9.81 * 4000, true)
+            player.collider = world:newBSGRectangleCollider(150, 575, 100, 130, 10)
+            player.collider:setFixedRotation(true)
+            RenderMap()   
+        end]]
         
         -- Controle de disparos
         controlShots(dt)
@@ -297,14 +354,15 @@ function love.update(dt)
 end
 
 function love.keypressed(k)
-    if k == 'x' then
+    if k == 'x' and haveEmptyHand then
         player.arma = 'hand'
         playerClass.RenderPlayer()
-    elseif k == 'z' then
+    elseif k == 'z' and haveBow then
         player.arma = 'arco'
         playerClass.RenderPlayer()
-    elseif k == 'c' then
-        player.arma = 'espada'            
+    elseif k == 'c' and haveSword then
+        player.arma = 'sword'
+        playerClass.RenderPlayer()         
     end
     
     if k == '0' then
@@ -338,6 +396,14 @@ function RenderMap()
     elseif fase == 2 or fase == 0 then
         if gameMapCave.layers['Chao'] then
             for i, obj in pairs(gameMapCave.layers['Chao'].objects) do
+                wall = world:newRectangleCollider(obj.x, obj.y, obj.width, obj.height)
+                wall:setType('static')
+                table.insert(walls, wall)
+            end
+        end
+    elseif fase == 3 or fase == 0 then
+        if gameMapCastle.layers['Chao'] then
+            for i, obj in pairs(gameMapCastle.layers['Chao'].objects) do
                 wall = world:newRectangleCollider(obj.x, obj.y, obj.width, obj.height)
                 wall:setType('static')
                 table.insert(walls, wall)
@@ -393,13 +459,13 @@ function restartGame()
     suit.layout:reset(650, 500)
     if suit.Button("Recomeçar", {id=3}, suit.layout:row(200,50)).hit then
         fase = 1
-        player.life = 5        
-        player.x = 100 
-        player.y = 575         
+        player.life = 5
+        player.x = 100
+        player.y = 575
         player.collider = world:destroy()
         world = wf.newWorld(0, 9.81 * 4000, true)
         player.collider = world:newBSGRectangleCollider(150, 575, 100, 130, 10)
         player.collider:setFixedRotation(true)
-        RenderMap()                
+        RenderMap()
     end
 end
