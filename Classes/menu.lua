@@ -14,6 +14,11 @@ ClasseMenu.new = function()
             -- Refere-se a fase 1
             return 1
         end
+
+        if suit.Button("Configurações", {id=3}, suit.layout:row(500,50)).hit then
+            -- Refere-se as configurações
+            return -2
+        end
         
         if suit.Button("Sair", {id=2}, suit.layout:row()).hit then
             love.event.quit()

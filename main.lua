@@ -15,7 +15,7 @@ local LM = love.mouse
 local suit = require 'libraries/suit'
 local backgroundMenu
 local video
-
+local backgroundOpcoes
 local crosshair
 
 -- Classe do Player, Mapa e Colisão
@@ -98,6 +98,9 @@ function love.load()
 
     -- Adiciona meu background no menu
     backgroundMenu = LG.newImage('Insumos/Menu/backgroundMenu.jpg')
+
+    -- Adiciona meu meu background na opçoes
+    backgroundOpcoes = LG.newImage('Insumos/Menu/ConfiguraçõesJogo.png')
     
     -- Adiciona minha biblioteca de colisão
     world = wf.newWorld(0, 9.81 * 4000, true)
@@ -283,14 +286,16 @@ function love.draw()
         love.mouse.setCursor(crosshair)
 
     elseif fase == 0 then
-        LG.draw(backgroundMenu, 0 ,0)
+        LG.draw(backgroundMenu, (LG.getWidth() / 2) - 960 ,0)
         suit.draw()
     elseif fase == -1 then
-        LG.draw(video, -200,-200)
+        LG.draw(video, (LG.getWidth() / 2) - 960,0)
         
         if not video:isPlaying() then
             fase = 0
         end
+    elseif fase == -2 then
+        LG.draw(backgroundOpcoes, (LG.getWidth() / 2) - 720, 0)
     end
 end
 
@@ -300,15 +305,16 @@ function love.update(dt)
         playerGuns = {'hand'}
         player.arma = 'hand'
         -- Retorna a fase atual e a fase 1 quando o jogar clicar em inicar história
-        fase = menuClass.MenuButtons(suit)  
+        fase = menuClass.MenuButtons(suit)
+
         -- Destroi e constroi a fase 1 do jogo       
         player.collider = world:destroy()
         world = wf.newWorld(0, 9.81 * 4000, true)
         player.collider = world:newBSGRectangleCollider(150, 575, 100, 130, 10)
         player.collider:setFixedRotation(true)
-        RenderMap()   
+        RenderMap()
     elseif fase > 0 and player.life == 1 then
-        restartGame()        
+        restartGame()
     elseif fase > 0 and player.life > 1 then
         -- Inicia o cronometro do jogo
         showTimer = timerClass.gameTimer()
