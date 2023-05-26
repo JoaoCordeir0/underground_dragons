@@ -16,6 +16,8 @@ local suit = require 'libraries/suit'
 local backgroundMenu
 local video
 
+local crosshair
+
 -- Classe do Player, Mapa e Colisão
 local playerClass = nil
 local colissionClass = nil
@@ -86,6 +88,9 @@ function love.load()
     deadFont = LG.newFont('Insumos/Fonts/RetroMario-Regular.otf', 100)
     
     LG.setFont(gameFont)
+
+    -- Mira do jogo
+    crosshair = LM.newCursor("Insumos/Objeto/crosshair.png",0,0)
 
     -- Adiciona video de abertura
     video = LG.newVideo('Insumos/Videos/LogoPedregasAudio.ogv')
@@ -249,16 +254,17 @@ function love.draw()
         if player.life == 1 then                                                          
             LG.setFont(deadFont)                
             LG.setColor(255, 255, 255)                       
-            LG.print('Morreu', 570, 300)                 
+            LG.print('Morreu', (LG.getWidth() / 2) - 185, 300)                 
             LG.setFont(gameFont)        
             suit.draw() -- Renderiza o botão de reiniciar              
         end
 
         -- Timer do jogo
-        LG.print(showTimer, 1450, 10)
+        LG.print("Tempo: " .. showTimer, LG.getWidth() - 100, 10)
 
         -- Renderiza a barra de vida do usuário
         LG.draw(player.spriteHealthBar[player.life], 5, 5)
+
         -- Renderiza a arma que está sendo usada
         playerClass.weaponInUse()
 
@@ -273,6 +279,8 @@ function love.draw()
             LG.print('Mouse x -> ' .. mouseX, 10, 190)
             LG.print('Mouse y -> ' .. mouseY, 10, 210)
         end
+
+        love.mouse.setCursor(crosshair)
 
     elseif fase == 0 then
         LG.draw(backgroundMenu, 0 ,0)
@@ -395,7 +403,7 @@ end
 
 function love.keypressed(k)
     if k == 'escape' or k == 'space' and fase == -1 then
-        fase = 0        
+        fase = 0
         LG.draw(backgroundMenu, 0 ,0)
         suit.draw()   
         if video:isPlaying() then
@@ -519,7 +527,8 @@ end
 
 -- Função responsável por reiniciar o jogo quando o jogador morrer
 function restartGame()    
-    suit.layout:reset(650, 500)    
+    --suit.layout:reset(650, 500)    
+    suit.layout:reset((LG.getWidth() / 2) - 100, 500) -- x / y    
     if suit.Button("Recomeçar", {id=3}, suit.layout:row(200,50)).hit then
         fase = 1
         playerGuns = {'hand'}
