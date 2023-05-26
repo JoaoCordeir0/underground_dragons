@@ -74,8 +74,12 @@ local timeShot = activateMax
 local gameFont
 local deadFont
 
+-- Configurações do jogo
+local showFPS = false
+local showCoordinates = false
+
 function love.load()
-    -- love.window.setFullscreen(true, "desktop")
+    love.window.setFullscreen(true, "desktop")
 
     -- Fonte
     gameFont = LG.newFont('Insumos/Fonts/RetroMario-Regular.otf', 18)
@@ -198,11 +202,10 @@ function love.load()
     RenderMap()    
 end
 
-function love.draw()
-
+function love.draw()   
     if fase == 1 or fase == 2 then        
         -- Coloco o foco da camera no meu personagem
-        cam:attach()            
+        cam:attach()                             
             if player.life == 1 then
                 LG.setColor(255, 0, 0)     
             end            
@@ -229,16 +232,16 @@ function love.draw()
             -- Executa animação do personagem
             playerClass.RenderPlayer()
                 
-            if fase == 1 and player.arma == 'hand' and not haveBow then
+            if fase == 1 and player.arma == 'hand' and not tableClass.contains(playerGuns, 'bow') then
                 LG.draw(bow.img, bow.x, bow.y)
             end     
 
-            if fase == 2 and not haveSword then
+            if fase == 2 and not tableClass.contains(playerGuns, 'sword') then
                 LG.draw(sword.img, sword.x, sword.y)
             end
             
             for i, actual in pairs(shots) do        
-                LG.draw(actual.img, actual.x, actual.y)
+                LG.draw(actual.img, actual.x, actual.y, actual.ang)
             end            
             
         cam:detach()    
@@ -259,8 +262,17 @@ function love.draw()
         -- Renderiza a arma que está sendo usada
         playerClass.weaponInUse()
 
-        LG.print('X -> ' .. player.x, 10, 200)
-        LG.print('Y -> ' .. player.y, 10, 220)
+        if showFPS then
+            LG.print("FPS: " .. tostring(love.timer.getFPS( )), LG.getWidth() - 70, LG.getHeight() - 20)
+        end
+
+        if showCoordinates then
+            local mouseX, mouseY = love.mouse.getPosition()
+            LG.print('Eixo x -> ' .. player.x, 10, 150)
+            LG.print('Eixo y -> ' .. player.y, 10, 170)
+            LG.print('Mouse x -> ' .. mouseX, 10, 190)
+            LG.print('Mouse y -> ' .. mouseY, 10, 210)
+        end
 
     elseif fase == 0 then
         LG.draw(backgroundMenu, 0 ,0)
@@ -391,6 +403,14 @@ function love.keypressed(k)
         end
     end
    
+    if k == 'p' then
+        if showFPS then
+            showFPS = false
+        else
+            showFPS = true
+        end
+    end
+
     if k == 'x' and tableClass.contains(playerGuns, 'hand') then
         player.arma = 'hand'
         playerClass.RenderPlayer()
@@ -402,11 +422,11 @@ function love.keypressed(k)
         playerClass.RenderPlayer()         
     end
     
-    if k == '0' then
-        if player.life > 1 then
-            player.life = player.life - 1
+    if k == 'o' then
+        if showCoordinates then
+            showCoordinates = false
         else
-            player.life = 6
+            showCoordinates = true
         end
     end    
 end
@@ -463,6 +483,12 @@ function controlShots(dt)
         
         -- Coletar a posição do alvo (mouse)
         local alvoX, alvoY = love.mouse.getPosition()
+
+        if alvoX > 1200 then
+            alvoX = (alvoX / 2) + player.x
+        else
+            alvoX = alvoX + (player.x / 2)
+        end 
         
         -- Alvo do tiro
         local angle = math.atan2((alvoY - Y), (alvoX - X))
@@ -493,9 +519,10 @@ end
 
 -- Função responsável por reiniciar o jogo quando o jogador morrer
 function restartGame()    
-    suit.layout:reset(650, 500)
+    suit.layout:reset(650, 500)    
     if suit.Button("Recomeçar", {id=3}, suit.layout:row(200,50)).hit then
         fase = 1
+        playerGuns = {'hand'}
         player.life = 6
         player.x = 100
         player.y = 575
