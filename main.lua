@@ -390,17 +390,17 @@ function love.update(dt)
             player.collider = world:newBSGRectangleCollider(150, 575, 100, 130, 10)
             player.collider:setFixedRotation(true)
             RenderMap()
-        elseif colissionClass.HaveColission(player, caveCheckPoint) and fase == 2  then
+        elseif colissionClass.HaveColission(player, caveCheckPoint) and fase == 2 then
             fase = 3
             player.collider = world:destroy()
             world = wf.newWorld(0, 9.81 * 4000, true)
-            player.collider = world:newBSGRectangleCollider(150, 575, 100, 130, 10)
+            player.collider = world:newBSGRectangleCollider(150, 300, 100, 130, 10)
             player.collider:setFixedRotation(true)
+            player.y = 300 
+            player.collider:setY(player.y)
             RenderMap()
         end
 
-        
-        
         -- Controle de disparos
         controlShots(dt)
     end
