@@ -41,13 +41,13 @@ ClassePlayer.new = function(player)
                 player.spriteSheetDie[1]:getHeight() / 2
             )
         else
-            if player.arma == 'hand' then
+            if player.gun == 'hand' then
                 if not LK.isDown('right') and
-                    not LK.isDown('d') and
-                    not LK.isDown('left') and
-                    not LK.isDown('a') and
-                    not LK.isDown('up') and
-                    not LK.isDown('w') then
+                   not LK.isDown('d') and
+                   not LK.isDown('left') and
+                   not LK.isDown('a') and
+                   not LK.isDown('up') and
+                   not LK.isDown('w') then
                     LG.draw(
                         player.spriteSheetIdle[math.floor(player.currentSpriteIdle)],
                         player.x,
@@ -89,7 +89,7 @@ ClassePlayer.new = function(player)
                         player.spriteSheetJump[1]:getHeight() / 2
                     )
                 end
-            elseif player.arma == 'bow' then
+            elseif player.gun == 'bow' then
                 if not LK.isDown('right') and
                     not LK.isDown('d') and
                     not LK.isDown('left') and
@@ -151,7 +151,7 @@ ClassePlayer.new = function(player)
                         player.spriteSheetAttackBow[1]:getHeight() / 2
                     )
                 end
-            elseif player.arma == 'sword' then
+            elseif player.gun == 'sword' then
 
                 if not LK.isDown('right') and
                    not LK.isDown('d') and
@@ -298,9 +298,9 @@ ClassePlayer.new = function(player)
     end
 
     self.weaponInUse = function()
-        if player.arma == 'bow' then
+        if player.gun == 'bow' then
             return LG.draw(LG.newImage('Insumos/Objeto/icon_bow.png'), 290, 7)
-        elseif player.arma == 'sword' then
+        elseif player.gun == 'sword' then
             return LG.draw(LG.newImage('Insumos/Objeto/icon_sword.png'), 290, 7)
         end
     end

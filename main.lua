@@ -71,9 +71,9 @@ local posShot = {x = 0, y = 0, larg = 50, alt = 50}
 local shots = {}
 
 -- Timers para limitação de tiros
-local shotTrue = true
+local attackTrue = true
 local activateMax = 1.5
-local timeShot = activateMax
+local timeAttack = activateMax
 
 -- Fontes do jogo
 local gameFont
@@ -84,10 +84,10 @@ local showFPS = false
 local showCoordinates = false
 
 -- Tabelas de posições dos inimigos
-local fase1_enemys = {1585, 440, 2050, 505, 2800, 570}
+local fase1_enemys = {1585, 440, 3, 2050, 505, 3, 2700, 570, 3}
 
 function love.load()
-    love.window.setFullscreen(true, "desktop")
+    -- love.window.setFullscreen(true, "desktop")
 
     -- Fonte
     gameFont = LG.newFont('Insumos/Fonts/RetroMario-Regular.otf', 18)
@@ -99,7 +99,7 @@ function love.load()
     -- Adiciona video de abertura
     video = LG.newVideo('Insumos/Videos/videodefinitivo (2).ogv')
     video:play()
-
+    
     -- Adiciona meu background no menu
     backgroundMenu = LG.newImage('Insumos/Menu/backgroundMenu.jpg')
 
@@ -179,12 +179,17 @@ function love.load()
     -- Sprite inimigo fase 1
     enemy.spriteSheetIdle = {} -- Tabela de animacao do personagem parado
     enemy.spriteSheetDie = {} -- Tabela de animacao do personagem morrendo    
+    enemy.spriteSheetAttackHalberd = {} -- Tabela de animação do inimigo atacando com a lança
     enemy.currentSpriteIdle = 1    
     enemy.currentSpriteDie = 1
+    enemy.currentSpriteAttackHalberd = 1
+
+    -- Informações iniciais do inimigo
+    enemy.isAttacking = false   
 
     -- Informações da posição inicial do player
     player.life = 6
-    player.arma = 'hand'
+    player.gun = 'hand'
     player.x = 100
     player.y = 575
     player.speed = 400
@@ -220,8 +225,8 @@ function love.load()
     bow.size = 100
 
     -- Posição, tamanho e imagem da espada
-    sword.x = 1700
-    sword.y = 100
+    sword.x = 680
+    sword.y = 500
     sword.img = LG.newImage('Insumos/Objeto/weapon_sword.png')
     sword.size = 100
     
@@ -266,13 +271,13 @@ function love.draw()
             -- Executa animação do personagem
             playerClass.RenderPlayer()
                 
-            if fase == 1 and player.arma == 'hand' and not tableClass.contains(playerGuns, 'bow') then
-                LG.draw(bow.img, bow.x, bow.y)
-            end     
-
-            if fase == 2 and not tableClass.contains(playerGuns, 'sword') then
+            if fase == 1 and not tableClass.contains(playerGuns, 'sword') then
                 LG.draw(sword.img, sword.x, sword.y)
             end
+            
+            if fase == 1 and player.gun == 'hand' and not tableClass.contains(playerGuns, 'bow') then
+                LG.draw(bow.img, bow.x, bow.y)
+            end     
             
             for i, actual in pairs(shots) do        
                 LG.draw(actual.img, actual.x, actual.y, actual.ang)
@@ -331,7 +336,13 @@ function love.update(dt)
     if fase == 0 then
         -- Limpa as armas do player
         playerGuns = {'hand'}
-        player.arma = 'hand'
+        player.gun = 'hand'
+
+        -- Reseta as informações do inimigo
+        for i = 1, 9, 3 do
+            fase1_enemys[i + 2] = 3        
+        end
+
         -- Retorna a fase atual e a fase 1 quando o jogar clicar em inicar história
         fase = menuClass.MenuButtons(suit)
 
@@ -395,17 +406,17 @@ function love.update(dt)
         -- Percorre as imagens gerando a animação
         playerClass.RunThroughImagesPlayer(dt)
         enemyClass.RunThroughImagesEnemys(dt)
-        
-        -- Colidir com o arco e pega-lo
-        if colissionClass.HaveColission(player, bow) and fase == 1 then
-            player.arma = 'bow'
-            table.insert(playerGuns, 'bow')                       
+               
+        -- Colidir com a espada e pega-la
+        if colissionClass.HaveColission(player, sword) and fase == 1 then
+            player.gun = 'sword'
+            table.insert(playerGuns, 'sword')
         end
 
-        -- Colidir com a espada e pega-la
-        if colissionClass.HaveColission(player, sword) and fase == 2 then
-            player.arma = 'sword'
-            table.insert(playerGuns, 'sword')
+        -- Colidir com o arco e pega-lo
+        if colissionClass.HaveColission(player, bow) and fase == 1 then
+            player.gun = 'bow'
+            table.insert(playerGuns, 'bow')                       
         end
         
         -- Testa colisão da troca de mapas / Fase 1 para Fase 2
@@ -429,6 +440,12 @@ function love.update(dt)
 
         -- Controle de disparos
         controlShots(dt)
+
+        -- Controle de dano no personagem
+        enemy.isAttacking = applyDamagePlayer(dt)       
+
+        -- Controle de dano nos inimigos
+        applyDamageEnemy(dt)
     end
 end
 
@@ -451,13 +468,13 @@ function love.keypressed(k)
     end
 
     if k == '1' and tableClass.contains(playerGuns, 'hand') then
-        player.arma = 'hand'
+        player.gun = 'hand'
         playerClass.RenderPlayer()
     elseif k == '2' and tableClass.contains(playerGuns, 'bow') then
-        player.arma = 'bow'
+        player.gun = 'bow'
         playerClass.RenderPlayer()
     elseif k == '3' and tableClass.contains(playerGuns, 'sword') then
-        player.arma = 'sword'
+        player.gun = 'sword'
         playerClass.RenderPlayer()         
     end
     
@@ -510,12 +527,12 @@ end
 
 function controlShots(dt)
     -- Temporizador dos disparos
-    timeShot = timeShot - (1 * dt)
-    if timeShot < 0 then
-        shotTrue = true
+    timeAttack = timeAttack - (1 * dt)
+    if timeAttack < 0 then
+        attackTrue = true
     end
     -- Controlar o disparo com o mouse
-    if love.mouse.isDown(1) and shotTrue and player.arma == 'bow' then
+    if love.mouse.isDown(1) and attackTrue and player.gun == 'bow' then
         -- Definir a posição do disparo (meio da caixa)
         local X = posShot.x + (posShot.larg / 2)
         local Y = posShot.y + (posShot.alt / 2)  
@@ -536,9 +553,9 @@ function controlShots(dt)
         newShot = {x = X, y = Y, ang = angle, img = LG.newImage('Insumos/Objeto/arrow.png')}
         table.insert(shots, newShot)
 
-        shotTrue = false
+        attackTrue = false
 
-        timeShot = activateMax
+        timeAttack = activateMax
     end
         
     -- Animação dos disparos
@@ -561,18 +578,115 @@ function restartGame()
     --suit.layout:reset(650, 500)    
     suit.layout:reset((LG.getWidth() / 2) - 100, 500) -- x / y    
     if suit.Button("Recomeçar", {id=3}, suit.layout:row(200,50)).hit then
+        -- Reseta para fase 1
         fase = 1
+        -- Reseta o player
         playerGuns = {'hand'}
         player.life = 6
         player.x = 100
         player.y = 575
-        player.arma = 'hand'
-        haveBow = false
-        haveSword = false
+        player.gun = 'hand'    
+        -- Reseta o inimigo
+        for i = 1, 9, 3 do
+            fase1_enemys[i + 2] = 3        
+        end
+
         player.collider = world:destroy()
         world = wf.newWorld(0, 9.81 * 4000, true)
         player.collider = world:newBSGRectangleCollider(150, 575, 100, 130, 10)
         player.collider:setFixedRotation(true)
         RenderMap()
     end
+end
+
+-- Aplica dano ao personagem ao colidir com inimigos
+function applyDamagePlayer(dt)
+    for i = 1, 9, 3 do
+        -- Primeiro valida se o personagem está no mesmo lugar com range de 150 que o inimigo
+        if player.x > fase1_enemys[i] - 150 and player.x < fase1_enemys[i] + 150 then
+            -- Primeiro valida se o personagem está no mesmo lugar com range de 150 que o inimigo
+            if player.y > fase1_enemys[i + 1] - 150 and player.y < fase1_enemys[i + 1] + 150 then
+                -- Verifica se o inimigo colidido esta vivo
+                if fase1_enemys[i + 2] > 0 then
+                    -- Caso haja colisão, chama função que aplica dano no personagem
+                    playerClass.playerDamage(dt)
+                    -- Faz com que o personagem ataque 
+                    return true
+                end
+            end         
+        end
+    end
+end
+
+-- Aplica dano ao inimigo ao colidir com personagem
+function applyDamageEnemy(dt)
+
+    if player.gun == 'bow' then    
+        for i, shot in pairs(shots) do                                
+            for c = 1, 9, 3 do
+                -- Primeiro valida se o personagem está no mesmo lugar com range de 100 que o inimigo
+                if shot.x > fase1_enemys[c] - 100 and shot.x < fase1_enemys[c] + 100 then
+                    -- Primeiro valida se o personagem está no mesmo lugar com range de 100 que o inimigo
+                    if shot.y > fase1_enemys[c + 1] - 100 and shot.y < fase1_enemys[c + 1] + 100 then
+                        
+                        -- Caso haja colisão, aplica dano no inimigo
+
+                        -- 3 life do enemy 1
+                        -- 6 life do enemy 2
+                        -- 9 life do enemy 3
+
+                        if fase1_enemys[c + 2] > 0 then
+                            -- Remove o tiro
+                            table.remove(shots, i)
+
+                            if c >= 1 and c <= 2 then                            
+                                fase1_enemys[3] = fase1_enemys[3] - 1                                                
+                            elseif c >= 4 and c <= 5 then                            
+                                fase1_enemys[6] = fase1_enemys[6] - 1                        
+                            elseif c >= 7 and c <= 8 then                            
+                                fase1_enemys[9] = fase1_enemys[9] - 1  
+                            end
+                        end                       
+                    end
+                end
+            end
+        end 
+    elseif player.gun == 'sword' then
+        for i = 1, 9, 3 do
+            if LM.isDown(1) then
+
+                timeAttack = timeAttack - (1 * dt)
+                if timeAttack < 0 then
+                    attackTrue = true
+                end
+
+                if attackTrue then
+                    -- Primeiro valida se o personagem está no mesmo lugar com range de 150 que o inimigo
+                    if player.x > fase1_enemys[i] - 150 and player.x < fase1_enemys[i] + 150 then
+                        -- Primeiro valida se o personagem está no mesmo lugar com range de 150 que o inimigo
+                        if player.y > fase1_enemys[i + 1] - 150 and player.y < fase1_enemys[i + 1] + 150 then
+                            -- Caso haja colisão, aplica dano no inimigo
+
+                            -- 3 life do enemy 1
+                            -- 6 life do enemy 2
+                            -- 9 life do enemy 3
+                            if fase1_enemys[i + 2] > 0 then                     
+                                if i >= 1 and i <= 2 then                            
+                                    fase1_enemys[3] = fase1_enemys[3] - 2                                                
+                                elseif i >= 4 and i <= 5 then                            
+                                    fase1_enemys[6] = fase1_enemys[6] - 2                        
+                                elseif i >= 7 and i <= 8 then                            
+                                    fase1_enemys[9] = fase1_enemys[9] - 2  
+                                end
+                            end         
+                        end         
+                    end
+
+                    attackTrue = false
+                    timeAttack = activateMax
+                end
+            end
+        end
+    end
+
 end
