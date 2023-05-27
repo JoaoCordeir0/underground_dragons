@@ -72,8 +72,7 @@ local shots = {}
 
 -- Timers para limitação de tiros
 local attackTrue = true
-local activateMax = 1.5
-local timeAttack = activateMax
+local timeAttack = 1.5
 
 -- Fontes do jogo
 local gameFont
@@ -235,7 +234,7 @@ function love.load()
 end
 
 function love.draw()   
-    if fase == 1 or fase == 2 or fase == 3 then        
+    if fase >= 1 then        
         -- Coloco o foco da camera no meu personagem
         LG.setFont(gameFont)
 
@@ -252,7 +251,11 @@ function love.draw()
                 gameMapWoods:drawLayer(gameMapWoods.layers["Caverna"])
                 gameMapWoods:drawLayer(gameMapWoods.layers["Camada de Blocos 1"])
 
+                -- Renderiza os inimigos
                 enemyClass.RenderEnemy(1, fase1_enemys)
+                
+                -- Renderiza poção de vida no fim da fase
+                LG.draw(LG.newImage('Insumos/Objeto/health_potion.png'), 3600, 550)
 
             elseif fase == 2 then
                 gameMapCave:drawLayer(gameMapCave.layers["Camada de Blocos 3"])
@@ -271,11 +274,8 @@ function love.draw()
             -- Executa animação do personagem
             playerClass.RenderPlayer()
                 
-            if fase == 1 and not tableClass.contains(playerGuns, 'sword') then
-                LG.draw(sword.img, sword.x, sword.y)
-            end
-            
-            if fase == 1 and player.gun == 'hand' and not tableClass.contains(playerGuns, 'bow') then
+            if fase == 1 and not tableClass.contains(playerGuns, 'sword') and not tableClass.contains(playerGuns, 'bow') then
+                LG.draw(sword.img, sword.x, sword.y)            
                 LG.draw(bow.img, bow.x, bow.y)
             end     
             
@@ -321,9 +321,7 @@ function love.draw()
         LG.draw(LG.newImage('Insumos/Videos/logoDragoesDoSubmundo.png'), (LG.getWidth() / 2) - 360, -100)
         suit.draw()
     elseif fase == -1 then
-        LG.draw(video, (LG.getWidth() / 2) - 960, (LG.getHeight() / 2) - 540)
-        
-        
+        LG.draw(video, (LG.getWidth() / 2) - 960, (LG.getHeight() / 2) - 540)                
         if not video:isPlaying() then
             fase = 0
         end
@@ -421,6 +419,9 @@ function love.update(dt)
         
         -- Testa colisão da troca de mapas / Fase 1 para Fase 2
         if colissionClass.HaveColission(player, woodsCheckPoint) and fase == 1 then
+            if player.life < 5 then 
+                player.life = 5
+            end
             fase = 2
             player.collider = world:destroy()
             world = wf.newWorld(0, 9.81 * 4000, true)
@@ -459,6 +460,7 @@ function love.keypressed(k)
         end
     end
    
+    -- Opções de configuração do game
     if k == 'p' then
         if showFPS then
             showFPS = false
@@ -466,7 +468,15 @@ function love.keypressed(k)
             showFPS = true
         end
     end
+    if k == 'o' then
+        if showCoordinates then
+            showCoordinates = false
+        else
+            showCoordinates = true
+        end
+    end  
 
+    -- Teclas de troca de armas no inventário
     if k == '1' and tableClass.contains(playerGuns, 'hand') then
         player.gun = 'hand'
         playerClass.RenderPlayer()
@@ -476,15 +486,7 @@ function love.keypressed(k)
     elseif k == '3' and tableClass.contains(playerGuns, 'sword') then
         player.gun = 'sword'
         playerClass.RenderPlayer()         
-    end
-    
-    if k == 'o' then
-        if showCoordinates then
-            showCoordinates = false
-        else
-            showCoordinates = true
-        end
-    end    
+    end     
 end
 
 -- Função responsavel por renderizar o mapa
@@ -554,8 +556,7 @@ function controlShots(dt)
         table.insert(shots, newShot)
 
         attackTrue = false
-
-        timeAttack = activateMax
+        timeAttack = 1.5
     end
         
     -- Animação dos disparos
@@ -567,9 +568,9 @@ function controlShots(dt)
         actual.y = actual.y + (Dy * dt)
         
         -- Verificação para a limpeza de disparos que sairem da tela
-        -- if actual.x > LG.getWidth() or actual.y > LG.getHeight() or actual.x < 0 or actual.y < 0 then
-        --     table.remove(shots, i)
-        -- end
+        if actual.x > 5000 or actual.y > 2000 or actual.x < 0 or actual.y < 0 then
+            table.remove(shots, i)
+        end
     end
 end
 
@@ -654,22 +655,21 @@ function applyDamageEnemy(dt)
     elseif player.gun == 'sword' then
         for i = 1, 9, 3 do
             if LM.isDown(1) then
-
-                timeAttack = timeAttack - (1 * dt)
-                if timeAttack < 0 then
-                    attackTrue = true
-                end
-
-                if attackTrue then
+                -- Primeiro valida se o personagem está no mesmo lugar com range de 150 que o inimigo
+                if player.x > fase1_enemys[i] - 150 and player.x < fase1_enemys[i] + 150 then
                     -- Primeiro valida se o personagem está no mesmo lugar com range de 150 que o inimigo
-                    if player.x > fase1_enemys[i] - 150 and player.x < fase1_enemys[i] + 150 then
-                        -- Primeiro valida se o personagem está no mesmo lugar com range de 150 que o inimigo
-                        if player.y > fase1_enemys[i + 1] - 150 and player.y < fase1_enemys[i + 1] + 150 then
-                            -- Caso haja colisão, aplica dano no inimigo
+                    if player.y > fase1_enemys[i + 1] - 150 and player.y < fase1_enemys[i + 1] + 150 then
+                        -- Caso haja colisão, aplica dano no inimigo
 
-                            -- 3 life do enemy 1
-                            -- 6 life do enemy 2
-                            -- 9 life do enemy 3
+                        -- 3 life do enemy 1
+                        -- 6 life do enemy 2
+                        -- 9 life do enemy 3
+                        timeAttack = timeAttack - (1 * dt)
+                        if timeAttack < 0 then
+                            attackTrue = true
+                        end
+        
+                        if attackTrue then
                             if fase1_enemys[i + 2] > 0 then                     
                                 if i >= 1 and i <= 2 then                            
                                     fase1_enemys[3] = fase1_enemys[3] - 2                                                
@@ -678,13 +678,12 @@ function applyDamageEnemy(dt)
                                 elseif i >= 7 and i <= 8 then                            
                                     fase1_enemys[9] = fase1_enemys[9] - 2  
                                 end
-                            end         
-                        end         
-                    end
-
-                    attackTrue = false
-                    timeAttack = activateMax
-                end
+                            end    
+                            attackTrue = false
+                            timeAttack = 3 -- Define a dificuldade do jogo
+                        end     
+                    end         
+                end                   
             end
         end
     end
