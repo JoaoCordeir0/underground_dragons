@@ -211,7 +211,7 @@ function love.load()
 end
 
 function love.draw()   
-    if fase == 1 or fase == 2 then        
+    if fase == 1 or fase == 2 or fase == 3 then        
         -- Coloco o foco da camera no meu personagem
         cam:attach()                             
             if player.life == 1 then
@@ -232,9 +232,8 @@ function love.draw()
                 gameMapCave:drawLayer(gameMapCave.layers["caverna"])
                 gameMapCave:drawLayer(gameMapCave.layers["Camada de Blocos 5"])
             elseif fase == 3 then
-                gameMapCastle.drawLayer(gameMapCastle.layers["Camada de Blocos 6"])
-                gameMapCastle.drawLayer(gameMapCastle.layers["Camada de Blocos 1"])
-                gameMapCastle.drawLayer(gameMapCastle.layers["Camada de Blocos 5"])
+                gameMapCastle:drawLayer(gameMapCastle.layers["Camada de Blocos 1"])
+                gameMapCastle:drawLayer(gameMapCastle.layers["Camada de Blocos 5"])
             end
                 
             -- Executa animação do personagem
@@ -350,9 +349,9 @@ function love.update(dt)
         end
         
         -- Identifica queda nos espinhos
-        if player.y > 610 then
+        --[[if player.y > 610 then
             player.life = 1
-        end
+        end]]
 
         -- Posição de saida dos tiros, no caso o personagem
         posShot.x = player.x
@@ -380,7 +379,7 @@ function love.update(dt)
         -- Colidir com a espada e pega-la
         if colissionClass.HaveColission(player, sword) and fase == 2 then
             player.arma = 'sword'
-            table.insert(playerGuns, 'sword')         
+            table.insert(playerGuns, 'sword')
         end
         
         -- Testa colisão da troca de mapas / Fase 1 para Fase 2
@@ -391,16 +390,16 @@ function love.update(dt)
             player.collider = world:newBSGRectangleCollider(150, 575, 100, 130, 10)
             player.collider:setFixedRotation(true)
             RenderMap()
-        end
-
-        --[[if colissionClass.HaveColission(player, caveCheckPoint) and fase == 2 then
+        elseif colissionClass.HaveColission(player, caveCheckPoint) and fase == 2  then
             fase = 3
             player.collider = world:destroy()
             world = wf.newWorld(0, 9.81 * 4000, true)
             player.collider = world:newBSGRectangleCollider(150, 575, 100, 130, 10)
             player.collider:setFixedRotation(true)
-            RenderMap()   
-        end]]
+            RenderMap()
+        end
+
+        
         
         -- Controle de disparos
         controlShots(dt)
