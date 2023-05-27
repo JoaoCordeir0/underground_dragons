@@ -83,10 +83,12 @@ local showFPS = false
 local showCoordinates = false
 
 -- Tabelas de posições dos inimigos
-local fase1_enemys = {1585, 440, 3, 2050, 505, 3, 2700, 570, 3}
+                    --  x    y  life Attack
+local fase1_enemys = {1585, 440, 3, false, 2050, 505, 3, false, 2700, 570, 3, false}
+local fase2_enemys = {1080, 375, 3, false, 1820, 570, 3, false, 3030, 500, 3, false}
 
 function love.load()
-    love.window.setFullscreen(true, "desktop")
+    --love.window.setFullscreen(true, "desktop")
 
     -- Fonte
     gameFont = LG.newFont('Insumos/Fonts/RetroMario-Regular.otf', 18)
@@ -176,15 +178,20 @@ function love.load()
     player.currentSpriteAttackSword = 1
 
     -- Sprite inimigo fase 1
-    enemy.spriteSheetIdle = {} -- Tabela de animacao do personagem parado
-    enemy.spriteSheetDie = {} -- Tabela de animacao do personagem morrendo    
-    enemy.spriteSheetAttackHalberd = {} -- Tabela de animação do inimigo atacando com a lança
-    enemy.currentSpriteIdle = 1    
-    enemy.currentSpriteDie = 1
-    enemy.currentSpriteAttackHalberd = 1
+    enemy.spriteSheetIdle1 = {} -- Tabela de animacao do personagem parado
+    enemy.spriteSheetDie1 = {} -- Tabela de animacao do personagem morrendo    
+    enemy.spriteSheetAttack1 = {} -- Tabela de animação do inimigo atacando com a lança
+    enemy.currentSpriteIdle1 = 1    
+    enemy.currentSpriteDie1 = 1
+    enemy.currentSpriteAttack1 = 1
 
-    -- Informações iniciais do inimigo
-    enemy.isAttacking = false   
+    -- Sprite inimigo fase 2
+    enemy.spriteSheetIdle2 = {} -- Tabela de animacao do personagem parado
+    enemy.spriteSheetDie2 = {} -- Tabela de animacao do personagem morrendo    
+    enemy.spriteSheetAttack2 = {} -- Tabela de animação do inimigo atacando com a lança
+    enemy.currentSpriteIdle2 = 1    
+    enemy.currentSpriteDie2 = 1
+    enemy.currentSpriteAttack2 = 1
 
     -- Informações da posição inicial do player
     player.life = 6
@@ -264,6 +271,10 @@ function love.draw()
                 gameMapCave:drawLayer(gameMapCave.layers["Camada de Blocos 1"])
                 gameMapCave:drawLayer(gameMapCave.layers["caverna"])
                 gameMapCave:drawLayer(gameMapCave.layers["Camada de Blocos 5"])
+
+                -- Renderiza os inimigos
+                enemyClass.RenderEnemy(2, fase2_enemys)
+
             elseif fase == 3 then
                 gameMapCastle:drawLayer(gameMapCastle.layers["Background1"])
                 gameMapCastle:drawLayer(gameMapCastle.layers["Background3"])
@@ -341,9 +352,12 @@ function love.update(dt)
         player.gun = 'hand'
 
         -- Reseta as informações do inimigo
-        for i = 1, 9, 3 do
+        for i = 1, 12, 4 do
             fase1_enemys[i + 2] = 3        
-        end
+            fase2_enemys[i + 2] = 3     
+            fase1_enemys[i + 3] = false
+            fase2_enemys[i + 3] = false   
+        end     
 
         -- Retorna a fase atual e a fase 1 quando o jogar clicar em inicar história
         fase = menuClass.MenuButtons(suit)
@@ -449,10 +463,15 @@ function love.update(dt)
         controlShots(dt)
 
         -- Controle de dano no personagem
-        enemy.isAttacking = applyDamagePlayer(dt)       
-
-        -- Controle de dano nos inimigos
-        applyDamageEnemy(dt)
+        if fase == 1 then
+            applyDamagePlayer(dt, fase1_enemys)       
+            -- Controle de dano nos inimigos
+            applyDamageEnemy(dt, fase1_enemys)
+        elseif fase == 2 then
+            applyDamagePlayer(dt, fase2_enemys)       
+            -- Controle de dano nos inimigos
+            applyDamageEnemy(dt, fase2_enemys)
+        end       
     end
 end
 
@@ -594,9 +613,12 @@ function restartGame()
         player.y = 575
         player.gun = 'hand'    
         -- Reseta o inimigo
-        for i = 1, 9, 3 do
+        for i = 1, 12, 4 do
             fase1_enemys[i + 2] = 3        
-        end
+            fase2_enemys[i + 2] = 3     
+            fase1_enemys[i + 3] = false
+            fase2_enemys[i + 3] = false   
+        end        
 
         player.collider = world:destroy()
         world = wf.newWorld(0, 9.81 * 4000, true)
@@ -607,34 +629,51 @@ function restartGame()
 end
 
 -- Aplica dano ao personagem ao colidir com inimigos
-function applyDamagePlayer(dt)
-    for i = 1, 9, 3 do
-        -- Primeiro valida se o personagem está no mesmo lugar com range de 150 que o inimigo
-        if player.x > fase1_enemys[i] - 150 and player.x < fase1_enemys[i] + 150 then
-            -- Primeiro valida se o personagem está no mesmo lugar com range de 150 que o inimigo
-            if player.y > fase1_enemys[i + 1] - 150 and player.y < fase1_enemys[i + 1] + 150 then
-                -- Verifica se o inimigo colidido esta vivo
-                if fase1_enemys[i + 2] > 0 then
-                    -- Caso haja colisão, chama função que aplica dano no personagem
-                    playerClass.playerDamage(dt)
-                    -- Faz com que o personagem ataque 
-                    return true
-                end
-            end         
-        end
-    end
+function applyDamagePlayer(dt, faseEnemys)    
+    for i = 1, 12, 4 do
+        -- Primeiro valida se o personagem está no mesmo lugar com range de 150 que o inimigo -> X
+        local condition1 = player.x > faseEnemys[i] - 150 and player.x < faseEnemys[i] + 150
+        -- Valida se o personagem está no mesmo lugar com range de 150 que o inimigo -> Y
+        local condition2 = player.y > faseEnemys[i + 1] - 150 and player.y < faseEnemys[i + 1] + 150
+        -- Verifica se o inimigo colidido está vivo
+        local condition3 = faseEnemys[i + 2] > 0 
+
+        if condition1 and condition2 and condition3 then
+            if i >= 1 and i <= 2 then                            
+                -- Caso haja colisão, chama função que aplica dano no personagem
+                playerClass.playerDamage(dt)
+                faseEnemys[4] = true
+            else
+                faseEnemys[4] = false
+            end
+            if i >= 5 and i <= 6 then                            
+                -- Caso haja colisão, chama função que aplica dano no personagem
+                playerClass.playerDamage(dt)
+                faseEnemys[8] = true
+            else
+                faseEnemys[8] = false
+            end
+            if i >= 9 and i <= 10 then                            
+                -- Caso haja colisão, chama função que aplica dano no personagem
+                playerClass.playerDamage(dt)
+                faseEnemys[12] = true
+            else
+                faseEnemys[12] = false
+            end       
+        end          
+    end    
 end
 
 -- Aplica dano ao inimigo ao colidir com personagem
-function applyDamageEnemy(dt)
+function applyDamageEnemy(dt, faseEnemys)
 
     if player.gun == 'bow' then    
         for i, shot in pairs(shots) do                                
-            for c = 1, 9, 3 do
-                -- Primeiro valida se o personagem está no mesmo lugar com range de 100 que o inimigo
-                if shot.x > fase1_enemys[c] - 100 and shot.x < fase1_enemys[c] + 100 then
-                    -- Primeiro valida se o personagem está no mesmo lugar com range de 100 que o inimigo
-                    if shot.y > fase1_enemys[c + 1] - 100 and shot.y < fase1_enemys[c + 1] + 100 then
+            for c = 1, 12, 4 do
+                -- Primeiro valida se o personagem está no mesmo lugar com range de 100 que o inimigo -> X
+                if shot.x > faseEnemys[c] - 100 and shot.x < faseEnemys[c] + 100 then
+                    -- Valida se o personagem está no mesmo lugar com range de 100 que o inimigo -> Y
+                    if shot.y > faseEnemys[c + 1] - 100 and shot.y < faseEnemys[c + 1] + 100 then
                         
                         -- Caso haja colisão, aplica dano no inimigo
 
@@ -642,16 +681,16 @@ function applyDamageEnemy(dt)
                         -- 6 life do enemy 2
                         -- 9 life do enemy 3
 
-                        if fase1_enemys[c + 2] > 0 then
+                        if faseEnemys[c + 2] > 0 then
                             -- Remove o tiro
                             table.remove(shots, i)
 
                             if c >= 1 and c <= 2 then                            
-                                fase1_enemys[3] = fase1_enemys[3] - 1                                                
-                            elseif c >= 4 and c <= 5 then                            
-                                fase1_enemys[6] = fase1_enemys[6] - 1                        
-                            elseif c >= 7 and c <= 8 then                            
-                                fase1_enemys[9] = fase1_enemys[9] - 1  
+                                faseEnemys[3] = faseEnemys[3] - 1                                                
+                            elseif c >= 5 and c <= 6 then                            
+                                faseEnemys[7] = faseEnemys[7] - 1                        
+                            elseif c >= 9 and c <= 10 then                            
+                                faseEnemys[11] = faseEnemys[11] - 1  
                             end
                         end                       
                     end
@@ -659,12 +698,12 @@ function applyDamageEnemy(dt)
             end
         end 
     elseif player.gun == 'sword' then
-        for i = 1, 9, 3 do
+        for c = 1, 12, 4 do
             if LM.isDown(1) then
                 -- Primeiro valida se o personagem está no mesmo lugar com range de 150 que o inimigo
-                if player.x > fase1_enemys[i] - 150 and player.x < fase1_enemys[i] + 150 then
+                if player.x > faseEnemys[c] - 150 and player.x < faseEnemys[c] + 150 then
                     -- Primeiro valida se o personagem está no mesmo lugar com range de 150 que o inimigo
-                    if player.y > fase1_enemys[i + 1] - 150 and player.y < fase1_enemys[i + 1] + 150 then
+                    if player.y > faseEnemys[c + 1] - 150 and player.y < faseEnemys[c + 1] + 150 then
                         -- Caso haja colisão, aplica dano no inimigo
 
                         -- 3 life do enemy 1
@@ -676,17 +715,17 @@ function applyDamageEnemy(dt)
                         end
         
                         if attackTrue then
-                            if fase1_enemys[i + 2] > 0 then                     
-                                if i >= 1 and i <= 2 then                            
-                                    fase1_enemys[3] = fase1_enemys[3] - 2                                                
-                                elseif i >= 4 and i <= 5 then                            
-                                    fase1_enemys[6] = fase1_enemys[6] - 2                        
-                                elseif i >= 7 and i <= 8 then                            
-                                    fase1_enemys[9] = fase1_enemys[9] - 2  
+                            if faseEnemys[c + 2] > 0 then                     
+                                if c >= 1 and c <= 2 then                            
+                                    faseEnemys[3] = faseEnemys[3] - 1                                                
+                                elseif c >= 5 and c <= 6 then                            
+                                    faseEnemys[7] = faseEnemys[7] - 1                        
+                                elseif c >= 9 and c <= 10 then                            
+                                    faseEnemys[11] = faseEnemys[11] - 1  
                                 end
                             end    
                             attackTrue = false
-                            timeAttack = 3 -- Define a dificuldade do jogo
+                            timeAttack = 2 -- Define a dificuldade de ataque com a espada
                         end     
                     end         
                 end                   
