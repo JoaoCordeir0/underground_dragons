@@ -86,7 +86,7 @@ local showCoordinates = false
 local fase1_enemys = {1585, 440, 3, 2050, 505, 3, 2700, 570, 3}
 
 function love.load()
-    -- love.window.setFullscreen(true, "desktop")
+    love.window.setFullscreen(true, "desktop")
 
     -- Fonte
     gameFont = LG.newFont('Insumos/Fonts/RetroMario-Regular.otf', 18)
@@ -218,14 +218,14 @@ function love.load()
     caveCheckPoint.size = 200
     
     -- Posição, tamanho e imagem do arco
-    bow.x = 680
-    bow.y = 500
+    bow.x = 560
+    bow.y = 465
     bow.img = LG.newImage('Insumos/Objeto/weapon_bow.png')
     bow.size = 100
 
     -- Posição, tamanho e imagem da espada
-    sword.x = 680
-    sword.y = 500
+    sword.x = 700
+    sword.y = 485
     sword.img = LG.newImage('Insumos/Objeto/weapon_sword.png')
     sword.size = 100
     
@@ -248,6 +248,7 @@ function love.draw()
                 gameMapWoods:drawLayer(gameMapWoods.layers["Background3"])
                 gameMapWoods:drawLayer(gameMapWoods.layers["Background2"])
                 gameMapWoods:drawLayer(gameMapWoods.layers["Background1"])
+                gameMapWoods:drawLayer(gameMapWoods.layers["Vegetacao"])
                 gameMapWoods:drawLayer(gameMapWoods.layers["Caverna"])
                 gameMapWoods:drawLayer(gameMapWoods.layers["Camada de Blocos 1"])
 
@@ -274,11 +275,14 @@ function love.draw()
             -- Executa animação do personagem
             playerClass.RenderPlayer()
                 
-            if fase == 1 and not tableClass.contains(playerGuns, 'sword') and not tableClass.contains(playerGuns, 'bow') then
-                LG.draw(sword.img, sword.x, sword.y)            
+            if fase == 1 and not tableClass.contains(playerGuns, 'bow') then
                 LG.draw(bow.img, bow.x, bow.y)
             end     
-            
+
+            if fase == 1 and not tableClass.contains(playerGuns, 'sword') then
+                LG.draw(sword.img, sword.x, sword.y)      
+            end
+                        
             for i, actual in pairs(shots) do        
                 LG.draw(actual.img, actual.x, actual.y, actual.ang)
             end            
@@ -370,9 +374,11 @@ function love.update(dt)
         if LK.isDown('up') or LK.isDown('w') then
             vy = player.speed * -5
         end
-    
-        cam:lookAt(player.x, player.y - 200)
-        
+
+        if player.x < 3080 then
+            cam:lookAt(player.x, player.y - 200)
+        end
+
         local w = LG.getWidth()
         local h = LG.getHeight()
         
@@ -381,11 +387,11 @@ function love.update(dt)
             cam.x = w / 2
         end
         
-        -- Esconde fundo preto (Top)
+        -- Esconde fundo preto Top left
         if cam.y < h / 2 then
             cam.y = h / 2
         end
-        
+
         -- Identifica queda nos espinhos
         if player.y > 610 then
             player.life = 1
