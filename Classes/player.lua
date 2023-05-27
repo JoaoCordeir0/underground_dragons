@@ -219,7 +219,7 @@ ClassePlayer.new = function(player)
         end
     end
 
-    self.RunThroughImages = function(dt)
+    self.RunThroughImagesPlayer = function(dt)
         -- Animação personagem
         -- Animações sem armas
         -- Animação Corrida

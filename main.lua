@@ -4,6 +4,7 @@ require('Classes.menu')
 require('Classes.colission')
 require('Classes.timer')
 require('Classes.table')
+require('Classes.enemy')
 
 -- Atalhos
 local LK = love.keyboard
@@ -24,6 +25,7 @@ local colissionClass = nil
 local timerClass = nil
 local menuClass = nil
 local tableClass = nil
+local enemyClass = nil
 
 -- Variavel de controle do tempo do jogo
 local showTimer = "0:00"
@@ -34,6 +36,7 @@ local gameMapCave
 local gameMapCastle
 local wf = require 'libraries/windfield'
 local player = {}
+local enemy = {}
 
 -- Variaveis para tratar o mundo
 local fase = -1 --[[Fase: 0 - Menu Inicial | 1 - Woods Map | 2 - Cave Map]]
@@ -80,8 +83,11 @@ local deadFont
 local showFPS = false
 local showCoordinates = false
 
+-- Tabelas de posições dos inimigos
+local fase1_enemys = {1585, 440, 2050, 505, 2800, 570}
+
 function love.load()
-    love.window.setFullscreen(true, "desktop")
+    -- love.window.setFullscreen(true, "desktop")
 
     -- Fonte
     gameFont = LG.newFont('Insumos/Fonts/RetroMario-Regular.otf', 18)
@@ -120,6 +126,9 @@ function love.load()
     -- Instância da classe de busca em tabelas ou mais conhecido como array
     tableClass = ClasseTable.new()
 
+    -- Instância da classe de inimigos
+    enemyClass = ClasseEnemy.new(enemy)
+
     -- Adiciona minha biblioteca de camera
     cam = camera()
     
@@ -132,16 +141,19 @@ function love.load()
     -- Carrega o Personagem
     -- Vida do personagem
     player.spriteHealthBar = {}
+    
     -- Personagem sem arma
     player.spriteSheetRun = {} -- Tabela de animacao do personagem andando
     player.spriteSheetIdle = {} -- Tabela de animacao do personagem parado
     player.spriteSheetJump = {} -- Tabela de animacao do personagem pulando
     player.spriteSheetDie = {} -- Tabela de animacao do personagem morrendo
+    
     -- Personagem com arco
     player.spriteSheetRunBow = {} -- Tabela de animacao do personagem andando com arco
     player.spriteSheetIdleBow = {} -- Tabela de animacao do personagem parado com arco
     player.spriteSheetJumpBow = {} -- Tabela de animacao do personagem pulando com arco
     player.spriteSheetAttackBow = {} -- Tabela de animacao do personagem atirando com arco
+    
     -- Personagem com espada
     player.spriteSheetRunSword = {} -- Tabela de animacao do personagem andando com espada
     player.spriteSheetIdleSword = {} -- Tabela de animacao do personagem parado com espada
@@ -166,6 +178,12 @@ function love.load()
     player.currentSpriteJumpSword = 1
     player.currentSpriteAttackSword = 1
 
+    -- Sprite inimigo fase 1
+    enemy.spriteSheetIdle = {} -- Tabela de animacao do personagem parado
+    enemy.spriteSheetDie = {} -- Tabela de animacao do personagem morrendo    
+    enemy.currentSpriteIdle = 1    
+    enemy.currentSpriteDie = 1
+
     -- Informações da posição inicial do player
     player.life = 6
     player.arma = 'hand'
@@ -178,8 +196,11 @@ function love.load()
     posShot.x = player.x
     posShot.y = player.y - 20
     
-    -- Carrea minhas imagens do personagem
+    -- Carrega minhas imagens do personagem
     playerClass.LoadPlayerImages()
+
+    -- Carrega as imagens do inimigo
+    enemyClass.LoadEnemyImages()
     
     -- Cria o mundo e o colisor do meu personagem
     player.collider = world:newBSGRectangleCollider(player.x, player.y, 100, 130, 10)
@@ -195,8 +216,8 @@ function love.load()
     caveCheckPoint.size = 200
     
     -- Posição, tamanho e imagem do arco
-    bow.x = 1530
-    bow.y = 350
+    bow.x = 680
+    bow.y = 500
     bow.img = LG.newImage('Insumos/Objeto/weapon_bow.png')
     bow.size = 100
 
@@ -225,6 +246,9 @@ function love.draw()
                 gameMapWoods:drawLayer(gameMapWoods.layers["Background1"])
                 gameMapWoods:drawLayer(gameMapWoods.layers["Caverna"])
                 gameMapWoods:drawLayer(gameMapWoods.layers["Camada de Blocos 1"])
+
+                enemyClass.RenderEnemy(1, fase1_enemys)
+
             elseif fase == 2 then
                 gameMapCave:drawLayer(gameMapCave.layers["Camada de Blocos 3"])
                 gameMapCave:drawLayer(gameMapCave.layers["Camada de Blocos 2"])
@@ -352,9 +376,9 @@ function love.update(dt)
         end
         
         -- Identifica queda nos espinhos
-        --[[if player.y > 610 then
+        if player.y > 610 then
             player.life = 1
-        end]]
+        end
 
         -- Posição de saida dos tiros, no caso o personagem
         posShot.x = player.x
@@ -367,16 +391,13 @@ function love.update(dt)
         player.y = player.collider:getY()   
         
         -- Percorre as imagens gerando a animação
-        playerClass.RunThroughImages(dt)
+        playerClass.RunThroughImagesPlayer(dt)
+        enemyClass.RunThroughImagesEnemys(dt)
         
         -- Colidir com o arco e pega-lo
         if colissionClass.HaveColission(player, bow) and fase == 1 then
             player.arma = 'bow'
-            table.insert(playerGuns, 'bow')         
-
-            -- Teste de perda de vida quando houver colisão
-            playerClass.playerDamage(dt)            
-            -- Fim do teste          
+            table.insert(playerGuns, 'bow')                       
         end
 
         -- Colidir com a espada e pega-la
