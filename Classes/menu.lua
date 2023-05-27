@@ -6,9 +6,11 @@ ClasseMenu.new = function()
     local self = self or {}    
     
     self.MenuButtons = function(suit)
-        suit.layout:reset((LG.getWidth() / 2) - 250,(LG.getHeight() / 2) - 50)
+        suit.layout:reset((LG.getWidth() / 2) - 250,(LG.getHeight() / 2) + 100)
         suit.layout:padding(10)
-        suit.Label("Dragões do Submundo", (LG.getWidth() / 2) - 100,100, 200,30)
+        
+        local fonteMenu = LG.newFont('Insumos/Fonts/RetroMario-Regular.otf',40)
+        LG.setFont(fonteMenu)
         
         if suit.Button("Iniciar História", {id=1}, suit.layout:row(500,50)).hit then            
             -- Refere-se a fase 1

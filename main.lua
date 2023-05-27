@@ -87,19 +87,17 @@ local showCoordinates = false
 local fase1_enemys = {1585, 440, 2050, 505, 2800, 570}
 
 function love.load()
-    -- love.window.setFullscreen(true, "desktop")
+    love.window.setFullscreen(true, "desktop")
 
     -- Fonte
     gameFont = LG.newFont('Insumos/Fonts/RetroMario-Regular.otf', 18)
     deadFont = LG.newFont('Insumos/Fonts/RetroMario-Regular.otf', 100)
     
-    LG.setFont(gameFont)
-
     -- Mira do jogo
     crosshair = LM.newCursor("Insumos/Objeto/crosshair.png",0,0)
 
     -- Adiciona video de abertura
-    video = LG.newVideo('Insumos/Videos/LogoPedregasAudio.ogv')
+    video = LG.newVideo('Insumos/Videos/videodefinitivo (2).ogv')
     video:play()
 
     -- Adiciona meu background no menu
@@ -234,6 +232,8 @@ end
 function love.draw()   
     if fase == 1 or fase == 2 or fase == 3 then        
         -- Coloco o foco da camera no meu personagem
+        LG.setFont(gameFont)
+
         cam:attach()                             
             if player.life == 1 then
                 LG.setColor(255, 0, 0)     
@@ -313,15 +313,17 @@ function love.draw()
 
     elseif fase == 0 then
         LG.draw(backgroundMenu, (LG.getWidth() / 2) - 960 ,0)
+        LG.draw(LG.newImage('Insumos/Videos/logoDragoesDoSubmundo.png'), (LG.getWidth() / 2) - 360, -100)
         suit.draw()
     elseif fase == -1 then
-        LG.draw(video, (LG.getWidth() / 2) - 960,0)
+        LG.draw(video, (LG.getWidth() / 2) - 960, (LG.getHeight() / 2) - 540)
+        
         
         if not video:isPlaying() then
             fase = 0
         end
     elseif fase == -2 then
-        LG.draw(backgroundOpcoes, (LG.getWidth() / 2) - 720, 0)
+        LG.draw(backgroundOpcoes, (LG.getWidth() / 2) - 800, 0)
     end
 end
 
@@ -448,13 +450,13 @@ function love.keypressed(k)
         end
     end
 
-    if k == 'x' and tableClass.contains(playerGuns, 'hand') then
+    if k == '1' and tableClass.contains(playerGuns, 'hand') then
         player.arma = 'hand'
         playerClass.RenderPlayer()
-    elseif k == 'z' and tableClass.contains(playerGuns, 'bow') then
+    elseif k == '2' and tableClass.contains(playerGuns, 'bow') then
         player.arma = 'bow'
         playerClass.RenderPlayer()
-    elseif k == 'c' and tableClass.contains(playerGuns, 'sword') then
+    elseif k == '3' and tableClass.contains(playerGuns, 'sword') then
         player.arma = 'sword'
         playerClass.RenderPlayer()         
     end
