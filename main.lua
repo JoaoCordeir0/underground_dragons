@@ -232,6 +232,9 @@ function love.draw()
                 gameMapCave:drawLayer(gameMapCave.layers["caverna"])
                 gameMapCave:drawLayer(gameMapCave.layers["Camada de Blocos 5"])
             elseif fase == 3 then
+                gameMapCastle:drawLayer(gameMapCastle.layers["Background1"])
+                gameMapCastle:drawLayer(gameMapCastle.layers["Background3"])
+                gameMapCastle:drawLayer(gameMapCastle.layers["Background2"])
                 gameMapCastle:drawLayer(gameMapCastle.layers["Camada de Blocos 1"])
                 gameMapCastle:drawLayer(gameMapCastle.layers["Camada de Blocos 5"])
             end
@@ -396,7 +399,7 @@ function love.update(dt)
             world = wf.newWorld(0, 9.81 * 4000, true)
             player.collider = world:newBSGRectangleCollider(150, 300, 100, 130, 10)
             player.collider:setFixedRotation(true)
-            player.y = 300 
+            player.y = 300
             player.collider:setY(player.y)
             RenderMap()
         end
