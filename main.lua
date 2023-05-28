@@ -325,8 +325,9 @@ function love.draw()
                 gameMapCastle:drawLayer(gameMapCastle.layers["Background1"])
                 gameMapCastle:drawLayer(gameMapCastle.layers["Background3"])
                 gameMapCastle:drawLayer(gameMapCastle.layers["Background2"])
-                gameMapCastle:drawLayer(gameMapCastle.layers["Camada de Blocos 1"])
                 gameMapCastle:drawLayer(gameMapCastle.layers["Camada de Blocos 5"])
+                gameMapCastle:drawLayer(gameMapCastle.layers["Camada de Blocos 1"])
+                gameMapCastle:drawLayer(gameMapCastle.layers["Escada"])
 
                 -- Renderiza os inimigos
                 enemyClass.RenderEnemy(3, fase3_enemys)
