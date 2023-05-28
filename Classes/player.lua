@@ -12,9 +12,14 @@ ClassePlayer = {}
 ClassePlayer.new = function(player)
     local self = self or {}
 
-    self.player = player
+    self.player = player   
 
-    self.playerDamage = function(dt)
+    self.playerDamage = function(dt, tipo)
+        -- Adiciona mais delay na perca de vida do personagem quando a luta for com o boss
+        if tipo == 'boss' then
+            activateMax = 2.5            
+        end
+
         timeDamage = timeDamage - (1 * dt)
         if timeDamage < 0 then
             damageTrue = true

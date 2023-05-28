@@ -5,6 +5,7 @@ require('Classes.colission')
 require('Classes.timer')
 require('Classes.table')
 require('Classes.enemy')
+require('Classes.npc')
 
 -- Atalhos
 local LK = love.keyboard
@@ -17,6 +18,8 @@ local suit = require 'libraries/suit'
 local backgroundMenu
 local video
 local backgroundOpcoes
+local historyGame
+local winGame
 local crosshair
 
 -- Classe do Player, Mapa e Colisão
@@ -26,6 +29,7 @@ local timerClass = nil
 local menuClass = nil
 local tableClass = nil
 local enemyClass = nil
+local npcClass = nil
 
 -- Variavel de controle do tempo do jogo
 local showTimer = "0:00"
@@ -37,9 +41,10 @@ local gameMapCastle
 local wf = require 'libraries/windfield'
 local player = {}
 local enemy = {}
+local npc = {}
 
 -- Variaveis para tratar o mundo
-local fase = -1 --[[Fase: 0 - Menu Inicial | 1 - Woods Map | 2 - Cave Map]]
+local fase = -4
 local world
 local espinho
 local espinhos = {}
@@ -86,6 +91,8 @@ local showCoordinates = false
                     --  x    y  life Attack
 local fase1_enemys = {1585, 440, 3, false, 2050, 505, 3, false, 2700, 570, 3, false}
 local fase2_enemys = {1080, 375, 3, false, 1820, 570, 3, false, 3030, 500, 3, false}
+local fase3_enemys = {1080, 485, 3, false, 1675, 230, 3, false, 2500, 465, 3, false}
+local fase3_boss = {3300, 405, 9, false}
 
 function love.load()
     --love.window.setFullscreen(true, "desktop")
@@ -97,17 +104,23 @@ function love.load()
     -- Mira do jogo
     crosshair = LM.newCursor("Insumos/Objeto/crosshair.png",0,0)
 
-    -- Adiciona video de abertura
+    -- Carrega video de abertura
     video = LG.newVideo('Insumos/Videos/videodefinitivo (2).ogv')
     video:play()
     
-    -- Adiciona meu background no menu
+    -- Carrega meu background no menu
     backgroundMenu = LG.newImage('Insumos/Menu/backgroundMenu.jpg')
 
-    -- Adiciona meu meu background na opçoes
-    backgroundOpcoes = LG.newImage('Insumos/Menu/ConfiguraçõesJogo.png')
-    
-    -- Adiciona minha biblioteca de colisão
+    -- Carrega meu background na opçoes
+    backgroundOpcoes = LG.newImage('Insumos/Menu/ConfigsGame.png')
+
+    -- Carrega imagem da história do jogo
+    historyGame = LG.newImage('Insumos/Menu/HistoryGame.png')
+
+    -- Carrega a tela de vitória do personagem
+    winGame = LG.newImage('Insumos/Menu/WinGame.png')
+
+    -- Carrega minha biblioteca de colisão
     world = wf.newWorld(0, 9.81 * 4000, true)
 
     -- Instância da classe do Player
@@ -127,6 +140,9 @@ function love.load()
 
     -- Instância da classe de inimigos
     enemyClass = ClasseEnemy.new(enemy)
+
+    -- Instância da classe de npcs
+    npcClass = ClasseNpc.new(npc)
 
     -- Adiciona minha biblioteca de camera
     cam = camera()
@@ -193,6 +209,30 @@ function love.load()
     enemy.currentSpriteDie2 = 1
     enemy.currentSpriteAttack2 = 1
 
+    -- Sprite inimigo fase 3
+    enemy.spriteSheetIdle3 = {} -- Tabela de animacao do personagem parado
+    enemy.spriteSheetDie3 = {} -- Tabela de animacao do personagem morrendo    
+    enemy.spriteSheetAttack3 = {} -- Tabela de animação do inimigo atacando com a lança
+    enemy.currentSpriteIdle3 = 1    
+    enemy.currentSpriteDie3 = 1
+    enemy.currentSpriteAttack3 = 1
+
+    -- Sprite inimigo fase 3 boss
+    enemy.spriteSheetIdle4 = {} -- Tabela de animacao do personagem parado
+    enemy.spriteSheetDie4 = {} -- Tabela de animacao do personagem morrendo    
+    enemy.spriteSheetRun4 = {} -- Tabela de animacao do personagem andando
+    enemy.spriteSheetAttack4 = {} -- Tabela de animação do inimigo atacando com a lança
+    enemy.currentSpriteIdle4 = 1    
+    enemy.currentSpriteDie4 = 1
+    enemy.currentSpriteRun4 = 1
+    enemy.currentSpriteAttack4 = 1
+
+    -- Sprite do NPC edwin
+    npc.spriteSheetIdle1 = {} -- Tabela de animacao do personagem parado    
+    npc.spriteSheetRun1 = {} -- Tabela de animacao do personagem andando    
+    npc.currentSpriteIdle1 = 1        
+    npc.currentSpriteRun1 = 1    
+
     -- Informações da posição inicial do player
     player.life = 6
     player.gun = 'hand'
@@ -210,6 +250,9 @@ function love.load()
 
     -- Carrega as imagens do inimigo
     enemyClass.LoadEnemyImages()
+
+    -- Carrega as imagens do NPC
+    npcClass.LoadNpcImages()
     
     -- Cria o mundo e o colisor do meu personagem
     player.collider = world:newBSGRectangleCollider(player.x, player.y, 100, 130, 10)
@@ -220,7 +263,7 @@ function love.load()
     woodsCheckPoint.y = 500
     woodsCheckPoint.size = 200
 
-    caveCheckPoint.x = 3750
+    caveCheckPoint.x = 3700
     caveCheckPoint.y = 500
     caveCheckPoint.size = 200
     
@@ -274,6 +317,9 @@ function love.draw()
 
                 -- Renderiza os inimigos
                 enemyClass.RenderEnemy(2, fase2_enemys)
+                
+                -- Renderiza poção de vida no fim da fase
+                LG.draw(LG.newImage('Insumos/Objeto/health_potion.png'), 3530, 480)
 
             elseif fase == 3 then
                 gameMapCastle:drawLayer(gameMapCastle.layers["Background1"])
@@ -281,6 +327,15 @@ function love.draw()
                 gameMapCastle:drawLayer(gameMapCastle.layers["Background2"])
                 gameMapCastle:drawLayer(gameMapCastle.layers["Camada de Blocos 1"])
                 gameMapCastle:drawLayer(gameMapCastle.layers["Camada de Blocos 5"])
+
+                -- Renderiza os inimigos
+                enemyClass.RenderEnemy(3, fase3_enemys)
+
+                -- Renderiza o boss
+                enemyClass.RenderEnemyBoss(3, fase3_boss)
+
+                -- Renderiza o doutor Edwin preso no castelo
+                npcClass.RenderNpc()
             end
                 
             -- Executa animação do personagem
@@ -336,12 +391,16 @@ function love.draw()
         LG.draw(LG.newImage('Insumos/Videos/logoDragoesDoSubmundo.png'), (LG.getWidth() / 2) - 360, -100)
         suit.draw()
     elseif fase == -1 then
+        LG.draw(historyGame, (LG.getWidth() / 2) - 800, 0)       
+    elseif fase == -2 then
+        LG.draw(winGame, (LG.getWidth() / 2) - 800, 0)       
+    elseif fase == -3 then
+        LG.draw(backgroundOpcoes, (LG.getWidth() / 2) - 800, 0)
+    elseif fase == -4 then
         LG.draw(video, (LG.getWidth() / 2) - 960, (LG.getHeight() / 2) - 540)                
         if not video:isPlaying() then
             fase = 0
         end
-    elseif fase == -2 then
-        LG.draw(backgroundOpcoes, (LG.getWidth() / 2) - 800, 0)
     end
 end
 
@@ -438,7 +497,7 @@ function love.update(dt)
         end
         
         -- Testa colisão da troca de mapas / Fase 1 para Fase 2
-        if colissionClass.HaveColission(player, woodsCheckPoint) and fase == 1 then
+        if colissionClass.HaveColission(player, woodsCheckPoint) and fase == 1 and enemyClass.checkEnemyDie(fase1_enemys) then            
             if player.life < 5 then 
                 player.life = 5
             end
@@ -448,7 +507,10 @@ function love.update(dt)
             player.collider = world:newBSGRectangleCollider(150, 575, 100, 130, 10)
             player.collider:setFixedRotation(true)
             RenderMap()
-        elseif colissionClass.HaveColission(player, caveCheckPoint) and fase == 2 then
+        elseif colissionClass.HaveColission(player, caveCheckPoint) and fase == 2 and enemyClass.checkEnemyDie(fase2_enemys) then
+            if player.life < 5 then 
+                player.life = 5
+            end
             fase = 3
             player.collider = world:destroy()
             world = wf.newWorld(0, 9.81 * 4000, true)
@@ -471,12 +533,23 @@ function love.update(dt)
             applyDamagePlayer(dt, fase2_enemys)       
             -- Controle de dano nos inimigos
             applyDamageEnemy(dt, fase2_enemys)
+        elseif fase == 3 then
+            applyDamagePlayer(dt, fase3_enemys)       
+            -- Controle de dano nos inimigos
+            applyDamageEnemy(dt, fase3_enemys)
+            -- Controle de dano no boss da fase 3
+            applyDamageBoss(dt)
         end       
+    end
+
+    -- Verifica se o player obteve a vitória     
+    if player.x > 3600 and fase3_boss[3] == 0 then
+        fase = -2
     end
 end
 
 function love.keypressed(k)
-    if k == 'escape' or k == 'space' and fase == -1 then
+    if k == 'escape' or k == 'space' and fase == -4 then
         fase = 0
         LG.draw(backgroundMenu, 0 ,0)
         suit.draw()   
@@ -485,6 +558,10 @@ function love.keypressed(k)
         end
     end
    
+    if fase == -1 and k == 'return' then
+        initGame()
+    end
+
     -- Opções de configuração do game
     if k == 'p' then
         if showFPS then
@@ -581,7 +658,7 @@ function controlShots(dt)
         table.insert(shots, newShot)
 
         attackTrue = false
-        timeAttack = 1.5
+        timeAttack = 1.3
     end
         
     -- Animação dos disparos
@@ -597,6 +674,31 @@ function controlShots(dt)
             table.remove(shots, i)
         end
     end
+end
+
+-- Função que inicia o jogo na fase 1 com todas as variaveis limpas
+function initGame()
+    -- Reseta para fase 1
+    fase = 1
+    -- Reseta o player
+    playerGuns = {'hand'}
+    player.life = 6
+    player.x = 100
+    player.y = 575
+    player.gun = 'hand'    
+    -- Reseta o inimigo
+    for i = 1, 12, 4 do
+        fase1_enemys[i + 2] = 3        
+        fase2_enemys[i + 2] = 3     
+        fase1_enemys[i + 3] = false
+        fase2_enemys[i + 3] = false   
+    end        
+
+    player.collider = world:destroy()
+    world = wf.newWorld(0, 9.81 * 4000, true)
+    player.collider = world:newBSGRectangleCollider(150, 575, 100, 130, 10)
+    player.collider:setFixedRotation(true)
+    RenderMap()
 end
 
 -- Função responsável por reiniciar o jogo quando o jogador morrer
@@ -641,21 +743,21 @@ function applyDamagePlayer(dt, faseEnemys)
         if condition1 and condition2 and condition3 then
             if i >= 1 and i <= 2 then                            
                 -- Caso haja colisão, chama função que aplica dano no personagem
-                playerClass.playerDamage(dt)
+                playerClass.playerDamage(dt, 'enemy')
                 faseEnemys[4] = true
             else
                 faseEnemys[4] = false
             end
             if i >= 5 and i <= 6 then                            
                 -- Caso haja colisão, chama função que aplica dano no personagem
-                playerClass.playerDamage(dt)
+                playerClass.playerDamage(dt, 'enemy')
                 faseEnemys[8] = true
             else
                 faseEnemys[8] = false
             end
             if i >= 9 and i <= 10 then                            
                 -- Caso haja colisão, chama função que aplica dano no personagem
-                playerClass.playerDamage(dt)
+                playerClass.playerDamage(dt, 'enemy')
                 faseEnemys[12] = true
             else
                 faseEnemys[12] = false
@@ -732,5 +834,63 @@ function applyDamageEnemy(dt, faseEnemys)
             end
         end
     end
+end
 
+-- Aplica dano ao boss
+function applyDamageBoss(dt)
+    -- Primeiro valida se o personagem está no mesmo lugar com range de 200 que o inimigo -> X
+    local condition1 = player.x > fase3_boss[1] - 200 and player.x < fase3_boss[1] + 200
+    -- Valida se o personagem está no mesmo lugar com range de 200 que o inimigo -> Y
+    local condition2 = player.y > fase3_boss[2] - 200 and player.y < fase3_boss[2] + 200
+    -- Verifica se o inimigo colidido está vivo
+    local condition3 = fase3_boss[3] > 0 
+
+    if condition1 and condition2 and condition3 then           
+        -- Caso haja colisão, chama função que aplica dano no personagem
+        playerClass.playerDamage(dt, 'enemy', 'boss')
+                    
+        fase3_boss[4] = true
+
+        -- Identifica dano causado no boss com espada 
+        if LM.isDown(1) and player.gun == 'sword' then
+            -- Caso haja colisão, aplica dano no inimigo            
+            timeAttack = timeAttack - (1 * dt)
+            if timeAttack < 0 then
+                attackTrue = true
+            end
+        
+            if attackTrue then
+                if fase3_boss[3] > 0 then                     
+                    fase3_boss[3] = fase3_boss[3] - 1
+                end    
+                attackTrue = false
+                timeAttack = 2 -- Define a dificuldade de ataque com a espada
+            end     
+        end
+    else
+        fase3_boss[4] = false    
+    end   
+    
+    if player.gun == 'bow' then    
+        for i, shot in pairs(shots) do                                           
+            -- Primeiro valida se o personagem está no mesmo lugar com range de 200 que o inimigo -> X
+            if shot.x > fase3_boss[1] - 200 and shot.x < fase3_boss[1] + 200 then
+                -- Valida se o personagem está no mesmo lugar com range de 200 que o inimigo -> Y
+                if shot.y > fase3_boss[2] - 200 and shot.y < fase3_boss[2] + 200 then                        
+                    -- Caso haja colisão, aplica dano no inimigo
+                    if fase3_boss[3] > 0 then
+                        -- Remove o tiro
+                        table.remove(shots, i)
+
+                        fase3_boss[3] = fase3_boss[3] - 1
+                    end                       
+                end
+            end          
+        end 
+    end
+end
+
+-- IA do boss para seguir o personagem 
+function bossIA()
+    -- Aqui vai a IA do boss
 end
