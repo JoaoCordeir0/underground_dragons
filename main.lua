@@ -238,13 +238,13 @@ function love.load()
     enemy.currentSpriteDie3 = 1
     enemy.currentSpriteAttack3 = 1
 
-    -- Sprite inimigo fase 3 boss    
+    -- Sprite inimigo fase 4 boss    
     enemy.spriteSheetDie4Left = {} -- Tabela de animacao do personagem morrendo    
     enemy.spriteSheetRun4Left = {} -- Tabela de animacao do personagem andando
     enemy.spriteSheetAttack4Left = {} -- Tabela de animação do inimigo atacando com a lança      
     enemy.currentSpriteDie4Left = 1
     enemy.currentSpriteRun4Left = 1
-    enemy.currentSpriteAttack4Left = 1    
+    enemy.currentSpriteAttack4Left = 1        
     enemy.spriteSheetDie4Right = {} -- Tabela de animacao do personagem morrendo    
     enemy.spriteSheetRun4Right = {} -- Tabela de animacao do personagem andando
     enemy.spriteSheetAttack4Right = {} -- Tabela de animação do inimigo atacando com a lança    

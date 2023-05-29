@@ -38,7 +38,7 @@ ClasseEnemy.new = function(enemy)
                 end
             else 
                 LG.draw(
-                    enemy.spriteSheetDie4Left[math.floor(enemy.currentSpriteRun4Left)],
+                    enemy.spriteSheetDie4Left[math.floor(enemy.currentSpriteDie4Left)],
                     boss[1],
                     boss[2],
                     0,
