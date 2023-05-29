@@ -95,7 +95,7 @@ local fase3_enemys = {1080, 485, 3, false, 1675, 230, 3, false, 2500, 465, 3, fa
 local fase3_boss = {3300, 405, 6, false, 'left'}
 
 function love.load()
-    --love.window.setFullscreen(true, "desktop")
+    love.window.setFullscreen(true, "desktop")
 
     -- Fonte
     gameFont = LG.newFont('Insumos/Fonts/RetroMario-Regular.otf', 18)
@@ -577,7 +577,7 @@ function love.update(dt)
     end
 
     -- Verifica se o player obteve a vitória     
-    if player.x > 3600 and fase3_boss[3] == 0 then
+    if player.x > 3600 and fase3_boss[3] == 0 and enemyClass.checkEnemyDie(fase3_enemys) then
         fase = -2
     end
 
