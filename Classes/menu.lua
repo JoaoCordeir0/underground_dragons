@@ -14,7 +14,7 @@ ClasseMenu.new = function()
         
         if suit.Button("Iniciar História", {id=1}, suit.layout:row(500,50)).hit then            
             -- Refere-se a tela de história do jogo
-            return -1            
+            return -1                        
         end
 
         if suit.Button("Configurações", {id=3}, suit.layout:row(500,50)).hit then

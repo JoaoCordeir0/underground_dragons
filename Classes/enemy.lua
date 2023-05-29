@@ -10,47 +10,86 @@ ClasseEnemy.new = function(enemy)
     self.enemy = enemy
 
     -- Renderiza o boss da fase 3
-    self.RenderEnemyBoss = function(fase, faseEnemys)
-        if faseEnemys[3] > 0 then
-            if faseEnemys[4] then        
-                LG.draw(
-                    enemy.spriteSheetAttack4[math.floor(enemy.currentSpriteAttack4)],
-                    faseEnemys[1],
-                    faseEnemys[2],
-                    0,
-                    1,
-                    1,
-                    enemy.spriteSheetAttack4[1]:getWidth() / 2,
-                    enemy.spriteSheetAttack4[1]:getHeight() / 2
-                ) 
+    self.RenderEnemyBoss = function(fase, boss)
+        if boss[5] == 'left' then    
+            if boss[3] > 0 then            
+                if boss[4] then        
+                    LG.draw(
+                        enemy.spriteSheetAttack4Left[math.floor(enemy.currentSpriteAttack4Left)],
+                        boss[1],
+                        boss[2],
+                        0,
+                        1,
+                        1,
+                        enemy.spriteSheetAttack4Left[1]:getWidth() / 2,
+                        enemy.spriteSheetAttack4Left[1]:getHeight() / 2
+                    ) 
+                else                  
+                    LG.draw(
+                        enemy.spriteSheetRun4Left[math.floor(enemy.currentSpriteRun4Left)],
+                        boss[1],
+                        boss[2],
+                        0,
+                        1,
+                        1,
+                        enemy.spriteSheetRun4Left[1]:getWidth() / 2,
+                        enemy.spriteSheetRun4Left[1]:getHeight() / 2
+                    )                     
+                end
             else 
                 LG.draw(
-                    enemy.spriteSheetIdle4[math.floor(enemy.currentSpriteIdle4)],
-                    faseEnemys[1],
-                    faseEnemys[2],
+                    enemy.spriteSheetDie4Left[math.floor(enemy.currentSpriteRun4Left)],
+                    boss[1],
+                    boss[2],
                     0,
                     1,
                     1,
-                    enemy.spriteSheetIdle4[1]:getWidth() / 2,
-                    enemy.spriteSheetIdle4[1]:getHeight() / 2
-                ) 
+                    enemy.spriteSheetDie4Left[1]:getWidth() / 2,
+                    enemy.spriteSheetDie4Left[1]:getHeight() / 2
+                )
             end
-        else 
-            LG.draw(
-                enemy.spriteSheetDie4[math.floor(enemy.currentSpriteDie4)],
-                faseEnemys[1],
-                faseEnemys[2],
-                0,
-                1,
-                1,
-                enemy.spriteSheetDie4[1]:getWidth() / 2,
-                enemy.spriteSheetDie4[1]:getHeight() / 2
-            )
+        else
+            if boss[3] > 0 then            
+                if boss[4] then        
+                    LG.draw(
+                        enemy.spriteSheetAttack4Right[math.floor(enemy.currentSpriteAttack4Right)],
+                        boss[1],
+                        boss[2],
+                        0,
+                        1,
+                        1,
+                        enemy.spriteSheetAttack4Right[1]:getWidth() / 2,
+                        enemy.spriteSheetAttack4Right[1]:getHeight() / 2
+                    ) 
+                else                  
+                    LG.draw(
+                        enemy.spriteSheetRun4Right[math.floor(enemy.currentSpriteRun4Right)],
+                        boss[1],
+                        boss[2],
+                        0,
+                        1,
+                        1,
+                        enemy.spriteSheetRun4Right[1]:getWidth() / 2,
+                        enemy.spriteSheetRun4Right[1]:getHeight() / 2
+                    )                     
+                end
+            else 
+                LG.draw(
+                    enemy.spriteSheetDie4Right[math.floor(enemy.currentSpriteDie4Right)],
+                    boss[1],
+                    boss[2],
+                    0,
+                    1,
+                    1,
+                    enemy.spriteSheetDie4Right[1]:getWidth() / 2,
+                    enemy.spriteSheetDie4Right[1]:getHeight() / 2
+                )
+            end
         end
     end
 
     -- Renderiza e executa animações do personagem
-    self.RenderEnemy = function(fase, faseEnemys)
+    self.RenderEnemy = function(fase, faseEnemys, audios)
         if fase == 1 then
             for i = 1, 12, 4 do     
                 if faseEnemys[i + 2] > 0 then
@@ -77,7 +116,7 @@ ClasseEnemy.new = function(enemy)
                             enemy.spriteSheetIdle1[1]:getHeight() / 2
                         ) 
                     end
-                else 
+                else                     
                     LG.draw(
                         enemy.spriteSheetDie1[math.floor(enemy.currentSpriteDie1)],
                         faseEnemys[i],
@@ -116,7 +155,7 @@ ClasseEnemy.new = function(enemy)
                             enemy.spriteSheetIdle2[1]:getHeight() / 2
                         ) 
                     end
-                else 
+                else                     
                     LG.draw(
                         enemy.spriteSheetDie2[math.floor(enemy.currentSpriteDie2)],
                         faseEnemys[i],
@@ -132,7 +171,8 @@ ClasseEnemy.new = function(enemy)
         elseif fase == 3 then
             for i = 1, 12, 4 do          
                 if faseEnemys[i + 2] > 0 then
-                    if faseEnemys[i + 3] then        
+                    if faseEnemys[i + 3] then     
+                        audios.fireBreath:play()   
                         LG.draw(
                             enemy.spriteSheetAttack3[math.floor(enemy.currentSpriteAttack3)],
                             faseEnemys[i],
@@ -271,65 +311,106 @@ ClasseEnemy.new = function(enemy)
         table.insert(enemy.spriteSheetAttack3, LG.newImage('Insumos/Dragon/Attack/attack_04.png'))      
 
         -- fase 3 - BOSS -
-        -- Animação de ficar Parado
-        table.insert(enemy.spriteSheetIdle4, LG.newImage('Insumos/Enemy/Skeleton Boss/idle/skeleton_boss_idle_00.png'))
-        table.insert(enemy.spriteSheetIdle4, LG.newImage('Insumos/Enemy/Skeleton Boss/idle/skeleton_boss_idle_01.png'))
-        table.insert(enemy.spriteSheetIdle4, LG.newImage('Insumos/Enemy/Skeleton Boss/idle/skeleton_boss_idle_02.png'))
-        table.insert(enemy.spriteSheetIdle4, LG.newImage('Insumos/Enemy/Skeleton Boss/idle/skeleton_boss_idle_03.png'))
-        table.insert(enemy.spriteSheetIdle4, LG.newImage('Insumos/Enemy/Skeleton Boss/idle/skeleton_boss_idle_04.png'))
-        table.insert(enemy.spriteSheetIdle4, LG.newImage('Insumos/Enemy/Skeleton Boss/idle/skeleton_boss_idle_05.png'))
-        table.insert(enemy.spriteSheetIdle4, LG.newImage('Insumos/Enemy/Skeleton Boss/idle/skeleton_boss_idle_06.png'))
-        table.insert(enemy.spriteSheetIdle4, LG.newImage('Insumos/Enemy/Skeleton Boss/idle/skeleton_boss_idle_07.png'))        
-        table.insert(enemy.spriteSheetIdle4, LG.newImage('Insumos/Enemy/Skeleton Boss/idle/skeleton_boss_idle_08.png'))        
-        table.insert(enemy.spriteSheetIdle4, LG.newImage('Insumos/Enemy/Skeleton Boss/idle/skeleton_boss_idle_09.png'))        
-
-        -- Animação de andando
-        table.insert(enemy.spriteSheetRun4, LG.newImage('Insumos/Enemy/Skeleton Boss/run/skeleton_boss_run_00.png'))
-        table.insert(enemy.spriteSheetRun4, LG.newImage('Insumos/Enemy/Skeleton Boss/run/skeleton_boss_run_01.png'))
-        table.insert(enemy.spriteSheetRun4, LG.newImage('Insumos/Enemy/Skeleton Boss/run/skeleton_boss_run_02.png'))
-        table.insert(enemy.spriteSheetRun4, LG.newImage('Insumos/Enemy/Skeleton Boss/run/skeleton_boss_run_03.png'))
-        table.insert(enemy.spriteSheetRun4, LG.newImage('Insumos/Enemy/Skeleton Boss/run/skeleton_boss_run_04.png'))
-        table.insert(enemy.spriteSheetRun4, LG.newImage('Insumos/Enemy/Skeleton Boss/run/skeleton_boss_run_05.png'))
-        table.insert(enemy.spriteSheetRun4, LG.newImage('Insumos/Enemy/Skeleton Boss/run/skeleton_boss_run_06.png'))
-        table.insert(enemy.spriteSheetRun4, LG.newImage('Insumos/Enemy/Skeleton Boss/run/skeleton_boss_run_07.png'))       
-        table.insert(enemy.spriteSheetRun4, LG.newImage('Insumos/Enemy/Skeleton Boss/run/skeleton_boss_run_08.png'))       
-        table.insert(enemy.spriteSheetRun4, LG.newImage('Insumos/Enemy/Skeleton Boss/run/skeleton_boss_run_09.png'))       
-        table.insert(enemy.spriteSheetRun4, LG.newImage('Insumos/Enemy/Skeleton Boss/run/skeleton_boss_run_10.png'))       
-        table.insert(enemy.spriteSheetRun4, LG.newImage('Insumos/Enemy/Skeleton Boss/run/skeleton_boss_run_11.png'))               
+        -- Animação de andando - Left
+        table.insert(enemy.spriteSheetRun4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/run_left/skeleton_boss_run_00.png'))
+        table.insert(enemy.spriteSheetRun4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/run_left/skeleton_boss_run_01.png'))
+        table.insert(enemy.spriteSheetRun4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/run_left/skeleton_boss_run_02.png'))
+        table.insert(enemy.spriteSheetRun4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/run_left/skeleton_boss_run_03.png'))
+        table.insert(enemy.spriteSheetRun4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/run_left/skeleton_boss_run_04.png'))
+        table.insert(enemy.spriteSheetRun4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/run_left/skeleton_boss_run_05.png'))
+        table.insert(enemy.spriteSheetRun4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/run_left/skeleton_boss_run_06.png'))
+        table.insert(enemy.spriteSheetRun4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/run_left/skeleton_boss_run_07.png'))       
+        table.insert(enemy.spriteSheetRun4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/run_left/skeleton_boss_run_08.png'))       
+        table.insert(enemy.spriteSheetRun4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/run_left/skeleton_boss_run_09.png'))       
+        table.insert(enemy.spriteSheetRun4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/run_left/skeleton_boss_run_10.png'))       
+        table.insert(enemy.spriteSheetRun4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/run_left/skeleton_boss_run_11.png'))               
+        -- Animação de andando - Right
+        table.insert(enemy.spriteSheetRun4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/run_right/skeleton_boss_run_00.png'))
+        table.insert(enemy.spriteSheetRun4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/run_right/skeleton_boss_run_01.png'))
+        table.insert(enemy.spriteSheetRun4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/run_right/skeleton_boss_run_02.png'))
+        table.insert(enemy.spriteSheetRun4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/run_right/skeleton_boss_run_03.png'))
+        table.insert(enemy.spriteSheetRun4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/run_right/skeleton_boss_run_04.png'))
+        table.insert(enemy.spriteSheetRun4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/run_right/skeleton_boss_run_05.png'))
+        table.insert(enemy.spriteSheetRun4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/run_right/skeleton_boss_run_06.png'))
+        table.insert(enemy.spriteSheetRun4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/run_right/skeleton_boss_run_07.png'))       
+        table.insert(enemy.spriteSheetRun4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/run_right/skeleton_boss_run_08.png'))       
+        table.insert(enemy.spriteSheetRun4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/run_right/skeleton_boss_run_09.png'))       
+        table.insert(enemy.spriteSheetRun4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/run_right/skeleton_boss_run_10.png'))       
+        table.insert(enemy.spriteSheetRun4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/run_right/skeleton_boss_run_11.png'))               
         
-        -- Animação atacando
-        table.insert(enemy.spriteSheetAttack4, LG.newImage('Insumos/Enemy/Skeleton Boss/attack/skeleton_boss_attack1_00.png'))
-        table.insert(enemy.spriteSheetAttack4, LG.newImage('Insumos/Enemy/Skeleton Boss/attack/skeleton_boss_attack1_01.png'))
-        table.insert(enemy.spriteSheetAttack4, LG.newImage('Insumos/Enemy/Skeleton Boss/attack/skeleton_boss_attack1_02.png'))
-        table.insert(enemy.spriteSheetAttack4, LG.newImage('Insumos/Enemy/Skeleton Boss/attack/skeleton_boss_attack1_03.png'))
-        table.insert(enemy.spriteSheetAttack4, LG.newImage('Insumos/Enemy/Skeleton Boss/attack/skeleton_boss_attack1_04.png'))
-        table.insert(enemy.spriteSheetAttack4, LG.newImage('Insumos/Enemy/Skeleton Boss/attack/skeleton_boss_attack1_05.png'))
-        table.insert(enemy.spriteSheetAttack4, LG.newImage('Insumos/Enemy/Skeleton Boss/attack/skeleton_boss_attack1_06.png'))
-        table.insert(enemy.spriteSheetAttack4, LG.newImage('Insumos/Enemy/Skeleton Boss/attack/skeleton_boss_attack1_07.png'))
-        table.insert(enemy.spriteSheetAttack4, LG.newImage('Insumos/Enemy/Skeleton Boss/attack/skeleton_boss_attack1_08.png'))
-        table.insert(enemy.spriteSheetAttack4, LG.newImage('Insumos/Enemy/Skeleton Boss/attack/skeleton_boss_attack1_09.png'))
-        table.insert(enemy.spriteSheetAttack4, LG.newImage('Insumos/Enemy/Skeleton Boss/attack/skeleton_boss_attack1_10.png'))
-        table.insert(enemy.spriteSheetAttack4, LG.newImage('Insumos/Enemy/Skeleton Boss/attack/skeleton_boss_attack1_11.png'))
-        table.insert(enemy.spriteSheetAttack4, LG.newImage('Insumos/Enemy/Skeleton Boss/attack/skeleton_boss_attack1_12.png'))
-        table.insert(enemy.spriteSheetAttack4, LG.newImage('Insumos/Enemy/Skeleton Boss/attack/skeleton_boss_attack1_13.png'))
-        table.insert(enemy.spriteSheetAttack4, LG.newImage('Insumos/Enemy/Skeleton Boss/attack/skeleton_boss_attack1_14.png'))
-        table.insert(enemy.spriteSheetAttack4, LG.newImage('Insumos/Enemy/Skeleton Boss/attack/skeleton_boss_attack1_15.png'))
-        table.insert(enemy.spriteSheetAttack4, LG.newImage('Insumos/Enemy/Skeleton Boss/attack/skeleton_boss_attack1_16.png'))
-        table.insert(enemy.spriteSheetAttack4, LG.newImage('Insumos/Enemy/Skeleton Boss/attack/skeleton_boss_attack1_17.png'))
-        table.insert(enemy.spriteSheetAttack4, LG.newImage('Insumos/Enemy/Skeleton Boss/attack/skeleton_boss_attack1_18.png'))
+        -- Animação atacando - Left 
+        table.insert(enemy.spriteSheetAttack4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_left/skeleton_boss_attack1_00.png'))
+        table.insert(enemy.spriteSheetAttack4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_left/skeleton_boss_attack1_01.png'))
+        table.insert(enemy.spriteSheetAttack4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_left/skeleton_boss_attack1_02.png'))
+        table.insert(enemy.spriteSheetAttack4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_left/skeleton_boss_attack1_03.png'))
+        table.insert(enemy.spriteSheetAttack4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_left/skeleton_boss_attack1_04.png'))
+        table.insert(enemy.spriteSheetAttack4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_left/skeleton_boss_attack1_05.png'))
+        table.insert(enemy.spriteSheetAttack4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_left/skeleton_boss_attack1_06.png'))
+        table.insert(enemy.spriteSheetAttack4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_left/skeleton_boss_attack1_07.png'))
+        table.insert(enemy.spriteSheetAttack4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_left/skeleton_boss_attack1_08.png'))
+        table.insert(enemy.spriteSheetAttack4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_left/skeleton_boss_attack1_09.png'))
+        table.insert(enemy.spriteSheetAttack4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_left/skeleton_boss_attack1_10.png'))
+        table.insert(enemy.spriteSheetAttack4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_left/skeleton_boss_attack1_11.png'))
+        table.insert(enemy.spriteSheetAttack4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_left/skeleton_boss_attack1_12.png'))
+        table.insert(enemy.spriteSheetAttack4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_left/skeleton_boss_attack1_13.png'))
+        table.insert(enemy.spriteSheetAttack4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_left/skeleton_boss_attack1_14.png'))
+        table.insert(enemy.spriteSheetAttack4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_left/skeleton_boss_attack1_15.png'))
+        table.insert(enemy.spriteSheetAttack4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_left/skeleton_boss_attack1_16.png'))
+        table.insert(enemy.spriteSheetAttack4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_left/skeleton_boss_attack1_17.png'))
+        table.insert(enemy.spriteSheetAttack4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_left/skeleton_boss_attack1_18.png'))
+        -- Animação atacando - Right 
+        table.insert(enemy.spriteSheetAttack4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_right/skeleton_boss_attack1_00.png'))
+        table.insert(enemy.spriteSheetAttack4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_right/skeleton_boss_attack1_01.png'))
+        table.insert(enemy.spriteSheetAttack4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_right/skeleton_boss_attack1_02.png'))
+        table.insert(enemy.spriteSheetAttack4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_right/skeleton_boss_attack1_03.png'))
+        table.insert(enemy.spriteSheetAttack4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_right/skeleton_boss_attack1_04.png'))
+        table.insert(enemy.spriteSheetAttack4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_right/skeleton_boss_attack1_05.png'))
+        table.insert(enemy.spriteSheetAttack4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_right/skeleton_boss_attack1_06.png'))
+        table.insert(enemy.spriteSheetAttack4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_right/skeleton_boss_attack1_07.png'))
+        table.insert(enemy.spriteSheetAttack4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_right/skeleton_boss_attack1_08.png'))
+        table.insert(enemy.spriteSheetAttack4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_right/skeleton_boss_attack1_09.png'))
+        table.insert(enemy.spriteSheetAttack4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_right/skeleton_boss_attack1_10.png'))
+        table.insert(enemy.spriteSheetAttack4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_right/skeleton_boss_attack1_11.png'))
+        table.insert(enemy.spriteSheetAttack4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_right/skeleton_boss_attack1_12.png'))
+        table.insert(enemy.spriteSheetAttack4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_right/skeleton_boss_attack1_13.png'))
+        table.insert(enemy.spriteSheetAttack4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_right/skeleton_boss_attack1_14.png'))
+        table.insert(enemy.spriteSheetAttack4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_right/skeleton_boss_attack1_15.png'))
+        table.insert(enemy.spriteSheetAttack4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_right/skeleton_boss_attack1_16.png'))
+        table.insert(enemy.spriteSheetAttack4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_right/skeleton_boss_attack1_17.png'))
+        table.insert(enemy.spriteSheetAttack4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/attack_right/skeleton_boss_attack1_18.png'))
 
-        -- Animação morto
-        table.insert(enemy.spriteSheetDie4, LG.newImage('Insumos/Enemy/Skeleton Boss/die/skeleton_boss_die_00.png'))
-        table.insert(enemy.spriteSheetDie4, LG.newImage('Insumos/Enemy/Skeleton Boss/die/skeleton_boss_die_01.png'))
-        table.insert(enemy.spriteSheetDie4, LG.newImage('Insumos/Enemy/Skeleton Boss/die/skeleton_boss_die_02.png'))
-        table.insert(enemy.spriteSheetDie4, LG.newImage('Insumos/Enemy/Skeleton Boss/die/skeleton_boss_die_03.png'))
-        table.insert(enemy.spriteSheetDie4, LG.newImage('Insumos/Enemy/Skeleton Boss/die/skeleton_boss_die_04.png'))
-        table.insert(enemy.spriteSheetDie4, LG.newImage('Insumos/Enemy/Skeleton Boss/die/skeleton_boss_die_05.png'))
-        table.insert(enemy.spriteSheetDie4, LG.newImage('Insumos/Enemy/Skeleton Boss/die/skeleton_boss_die_06.png'))  
-        table.insert(enemy.spriteSheetDie4, LG.newImage('Insumos/Enemy/Skeleton Boss/die/skeleton_boss_die_07.png'))  
-        table.insert(enemy.spriteSheetDie4, LG.newImage('Insumos/Enemy/Skeleton Boss/die/skeleton_boss_die_08.png'))  
-        table.insert(enemy.spriteSheetDie4, LG.newImage('Insumos/Enemy/Skeleton Boss/die/skeleton_boss_die_09.png'))  
-        table.insert(enemy.spriteSheetDie4, LG.newImage('Insumos/Enemy/Skeleton Boss/die/skeleton_boss_die_10.png'))          
+        -- Animação morto - Left
+        table.insert(enemy.spriteSheetDie4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/die_left/skeleton_boss_die_00.png'))
+        table.insert(enemy.spriteSheetDie4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/die_left/skeleton_boss_die_01.png'))
+        table.insert(enemy.spriteSheetDie4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/die_left/skeleton_boss_die_02.png'))
+        table.insert(enemy.spriteSheetDie4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/die_left/skeleton_boss_die_03.png'))
+        table.insert(enemy.spriteSheetDie4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/die_left/skeleton_boss_die_04.png'))
+        table.insert(enemy.spriteSheetDie4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/die_left/skeleton_boss_die_05.png'))
+        table.insert(enemy.spriteSheetDie4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/die_left/skeleton_boss_die_06.png'))  
+        table.insert(enemy.spriteSheetDie4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/die_left/skeleton_boss_die_07.png'))  
+        table.insert(enemy.spriteSheetDie4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/die_left/skeleton_boss_die_08.png'))  
+        table.insert(enemy.spriteSheetDie4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/die_left/skeleton_boss_die_09.png'))  
+        table.insert(enemy.spriteSheetDie4Left, LG.newImage('Insumos/Enemy/Skeleton Boss/die_left/skeleton_boss_die_10.png'))    
+        -- Animação morto - Right
+        table.insert(enemy.spriteSheetDie4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/die_right/skeleton_boss_die_00.png'))
+        table.insert(enemy.spriteSheetDie4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/die_right/skeleton_boss_die_01.png'))
+        table.insert(enemy.spriteSheetDie4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/die_right/skeleton_boss_die_02.png'))
+        table.insert(enemy.spriteSheetDie4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/die_right/skeleton_boss_die_03.png'))
+        table.insert(enemy.spriteSheetDie4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/die_right/skeleton_boss_die_04.png'))
+        table.insert(enemy.spriteSheetDie4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/die_right/skeleton_boss_die_05.png'))
+        table.insert(enemy.spriteSheetDie4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/die_right/skeleton_boss_die_06.png'))  
+        table.insert(enemy.spriteSheetDie4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/die_right/skeleton_boss_die_07.png'))  
+        table.insert(enemy.spriteSheetDie4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/die_right/skeleton_boss_die_08.png'))  
+        table.insert(enemy.spriteSheetDie4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/die_right/skeleton_boss_die_09.png'))  
+        table.insert(enemy.spriteSheetDie4Right, LG.newImage('Insumos/Enemy/Skeleton Boss/die_right/skeleton_boss_die_10.png'))          
+        
+        -- Barra de vida do boss
+        table.insert(enemy.spriteHealthBar, LG.newImage('Insumos/Enemy/Skeleton Boss/healthbar/healthBar1.png'))
+        table.insert(enemy.spriteHealthBar, LG.newImage('Insumos/Enemy/Skeleton Boss/healthbar/healthBar2.png'))
+        table.insert(enemy.spriteHealthBar, LG.newImage('Insumos/Enemy/Skeleton Boss/healthbar/healthBar3.png'))
+        table.insert(enemy.spriteHealthBar, LG.newImage('Insumos/Enemy/Skeleton Boss/healthbar/healthBar4.png'))
+        table.insert(enemy.spriteHealthBar, LG.newImage('Insumos/Enemy/Skeleton Boss/healthbar/healthBar5.png'))
+        table.insert(enemy.spriteHealthBar, LG.newImage('Insumos/Enemy/Skeleton Boss/healthbar/healthBar6.png'))               
     end
 
     self.RunThroughImagesEnemys = function(dt)
@@ -391,29 +472,42 @@ ClasseEnemy.new = function(enemy)
             enemy.currentSpriteDie3 = 3
         end 
 
-        -- Fase 3 Boss
-        -- Animação Parado
-        enemy.currentSpriteIdle4 = enemy.currentSpriteIdle4 + 10 * dt
-        if enemy.currentSpriteIdle4 >= 10 then
-            enemy.currentSpriteIdle4 = 1
-        end   
-        
+        -- Fase 3 Boss - Left              
         -- Animação do boss andando
-        enemy.currentSpriteRun4 = enemy.currentSpriteRun4 + 10 * dt
-        if enemy.currentSpriteRun4 >= 12 then
-            enemy.currentSpriteRun4 = 1
+        enemy.currentSpriteRun4Left = enemy.currentSpriteRun4Left + 10 * dt
+        if enemy.currentSpriteRun4Left >= 12 then
+            enemy.currentSpriteRun4Left = 1
         end 
         
         -- Animação do esqueleto
-        enemy.currentSpriteAttack4 = enemy.currentSpriteAttack4 + 10 * dt
-        if enemy.currentSpriteAttack4 >= 19 then
-            enemy.currentSpriteAttack4 = 1
+        enemy.currentSpriteAttack4Left = enemy.currentSpriteAttack4Left + 10 * dt
+        if enemy.currentSpriteAttack4Left >= 19 then
+            enemy.currentSpriteAttack4Left = 1
         end 
 
         -- Animação de morte
-        enemy.currentSpriteDie4 = enemy.currentSpriteDie4 + 10 * dt
-        if enemy.currentSpriteDie4 >= 11 then
-            enemy.currentSpriteDie4 = 11
+        enemy.currentSpriteDie4Left = enemy.currentSpriteDie4Left + 10 * dt
+        if enemy.currentSpriteDie4Left >= 11 then
+            enemy.currentSpriteDie4Left = 11
+        end 
+    
+        -- Fase 3 Boss - Right            
+        -- Animação do boss andando
+        enemy.currentSpriteRun4Right = enemy.currentSpriteRun4Right + 10 * dt
+        if enemy.currentSpriteRun4Right >= 12 then
+            enemy.currentSpriteRun4Right = 1
+        end 
+        
+        -- Animação do esqueleto
+        enemy.currentSpriteAttack4Right = enemy.currentSpriteAttack4Right + 10 * dt
+        if enemy.currentSpriteAttack4Right >= 19 then
+            enemy.currentSpriteAttack4Right = 1
+        end 
+
+        -- Animação de morte
+        enemy.currentSpriteDie4Right = enemy.currentSpriteDie4Right + 10 * dt
+        if enemy.currentSpriteDie4Right >= 11 then
+            enemy.currentSpriteDie4Right = 11
         end 
     end
     

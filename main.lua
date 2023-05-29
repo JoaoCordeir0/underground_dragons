@@ -2,7 +2,6 @@
 require('Classes.player')
 require('Classes.menu')
 require('Classes.colission')
-require('Classes.timer')
 require('Classes.table')
 require('Classes.enemy')
 require('Classes.npc')
@@ -25,7 +24,6 @@ local crosshair
 -- Classe do Player, Mapa e Colisão
 local playerClass = nil
 local colissionClass = nil
-local timerClass = nil
 local menuClass = nil
 local tableClass = nil
 local enemyClass = nil
@@ -50,6 +48,7 @@ local espinho
 local espinhos = {}
 local wall
 local walls = {}
+local audios = {}
 
 -- Variaveis para tratar as bibliotecas
 local camera = require 'libraries/camera'
@@ -92,7 +91,8 @@ local showCoordinates = false
 local fase1_enemys = {1585, 440, 3, false, 2050, 505, 3, false, 2700, 570, 3, false}
 local fase2_enemys = {1080, 375, 3, false, 1820, 570, 3, false, 3030, 500, 3, false}
 local fase3_enemys = {1080, 485, 3, false, 1675, 230, 3, false, 2500, 465, 3, false}
-local fase3_boss = {3300, 405, 9, false}
+                  -- x     y   life attack direction  
+local fase3_boss = {3300, 405, 6, false, 'left'}
 
 function love.load()
     --love.window.setFullscreen(true, "desktop")
@@ -105,7 +105,7 @@ function love.load()
     crosshair = LM.newCursor("Insumos/Objeto/crosshair.png",0,0)
 
     -- Carrega video de abertura
-    video = LG.newVideo('Insumos/Videos/videodefinitivo (2).ogv')
+    video = LG.newVideo('Insumos/Videos/VideoIntro.ogv')
     video:play()
     
     -- Carrega meu background no menu
@@ -128,9 +128,6 @@ function love.load()
 
     -- Instância da classe de colisão
     colissionClass = ClasseColission.new()
-    
-    -- Instância da classe de timer
-    timerClass = ClasseTimer.new()
 
     -- Instância da classe do menu
     menuClass = ClasseMenu.new()
@@ -144,6 +141,28 @@ function love.load()
     -- Instância da classe de npcs
     npcClass = ClasseNpc.new(npc)
 
+    -- Carrega os audios que serão usados no game 
+    audios.menu = love.audio.newSource('Insumos/Audios/Nubes.mp3', 'static')
+    audios.menu:setVolume(0.1)
+    audios.menu:setLooping(true)
+    audios.fase1 = love.audio.newSource('Insumos/Audios/Woods.mp3', 'static')
+    audios.fase1:setVolume(0.1)
+    audios.fase1:setLooping(true)
+    audios.fase2 = love.audio.newSource('Insumos/Audios/Cave.mp3', 'static')
+    audios.fase2:setVolume(0.1)
+    audios.fase2:setLooping(true)
+    audios.fase3 = love.audio.newSource('Insumos/Audios/Castle.mp3', 'static')
+    audios.fase3:setVolume(0.1)
+    audios.fase3:setLooping(true)
+    audios.sword = love.audio.newSource('Insumos/Audios/Sword.mp3', 'static')    
+    audios.sword:setVolume(0.4)
+    audios.fireBreath = love.audio.newSource('Insumos/Audios/FireBreath.mp3', 'static')    
+    audios.fireBreath:setVolume(0.4)
+    audios.bow = love.audio.newSource('Insumos/Audios/Bow.mp3', 'static')    
+    audios.bow:setVolume(0.4)    
+    audios.hit = love.audio.newSource('Insumos/Audios/Hit.mp3', 'static')    
+    audios.hit:setVolume(0.4)
+
     -- Adiciona minha biblioteca de camera
     cam = camera()
     
@@ -156,7 +175,9 @@ function love.load()
     -- Carrega o Personagem
     -- Vida do personagem
     player.spriteHealthBar = {}
-    
+    -- Vida do boss
+    enemy.spriteHealthBar = {}
+
     -- Personagem sem arma
     player.spriteSheetRun = {} -- Tabela de animacao do personagem andando
     player.spriteSheetIdle = {} -- Tabela de animacao do personagem parado
@@ -217,15 +238,19 @@ function love.load()
     enemy.currentSpriteDie3 = 1
     enemy.currentSpriteAttack3 = 1
 
-    -- Sprite inimigo fase 3 boss
-    enemy.spriteSheetIdle4 = {} -- Tabela de animacao do personagem parado
-    enemy.spriteSheetDie4 = {} -- Tabela de animacao do personagem morrendo    
-    enemy.spriteSheetRun4 = {} -- Tabela de animacao do personagem andando
-    enemy.spriteSheetAttack4 = {} -- Tabela de animação do inimigo atacando com a lança
-    enemy.currentSpriteIdle4 = 1    
-    enemy.currentSpriteDie4 = 1
-    enemy.currentSpriteRun4 = 1
-    enemy.currentSpriteAttack4 = 1
+    -- Sprite inimigo fase 3 boss    
+    enemy.spriteSheetDie4Left = {} -- Tabela de animacao do personagem morrendo    
+    enemy.spriteSheetRun4Left = {} -- Tabela de animacao do personagem andando
+    enemy.spriteSheetAttack4Left = {} -- Tabela de animação do inimigo atacando com a lança      
+    enemy.currentSpriteDie4Left = 1
+    enemy.currentSpriteRun4Left = 1
+    enemy.currentSpriteAttack4Left = 1    
+    enemy.spriteSheetDie4Right = {} -- Tabela de animacao do personagem morrendo    
+    enemy.spriteSheetRun4Right = {} -- Tabela de animacao do personagem andando
+    enemy.spriteSheetAttack4Right = {} -- Tabela de animação do inimigo atacando com a lança    
+    enemy.currentSpriteDie4Right = 1
+    enemy.currentSpriteRun4Right = 1
+    enemy.currentSpriteAttack4Right = 1
 
     -- Sprite do NPC edwin
     npc.spriteSheetIdle1 = {} -- Tabela de animacao do personagem parado    
@@ -272,6 +297,9 @@ function love.load()
     bow.y = 465
     bow.img = LG.newImage('Insumos/Objeto/weapon_bow.png')
     bow.size = 100
+    bow.amountArrowsFase1 = 4    
+    bow.amountArrowsFase2 = 4    
+    bow.amountArrowsFase3 = 10
 
     -- Posição, tamanho e imagem da espada
     sword.x = 700
@@ -330,7 +358,7 @@ function love.draw()
                 gameMapCastle:drawLayer(gameMapCastle.layers["Escada"])
 
                 -- Renderiza os inimigos
-                enemyClass.RenderEnemy(3, fase3_enemys)
+                enemyClass.RenderEnemy(3, fase3_enemys, audios)
 
                 -- Renderiza o boss
                 enemyClass.RenderEnemyBoss(3, fase3_boss)
@@ -342,7 +370,7 @@ function love.draw()
             -- Executa animação do personagem
             playerClass.RenderPlayer()
                 
-            if fase == 1 and not tableClass.contains(playerGuns, 'bow') then
+            if fase == 1 and not tableClass.contains(playerGuns, 'bow') and bow.amountArrowsFase1 > 0 then
                 LG.draw(bow.img, bow.x, bow.y)
             end     
 
@@ -362,16 +390,18 @@ function love.draw()
             LG.print('Morreu', (LG.getWidth() / 2) - 185, 300)                 
             LG.setFont(gameFont)        
             suit.draw() -- Renderiza o botão de reiniciar              
-        end
-
-        -- Timer do jogo
-        LG.print("Tempo: " .. showTimer, LG.getWidth() - 100, 10)
+        end      
 
         -- Renderiza a barra de vida do usuário
         LG.draw(player.spriteHealthBar[player.life], 5, 5)
 
+        if fase == 3 and fase3_boss[3] >= 1 then
+            -- Renderiza a barra de vida do boss
+            LG.draw(enemy.spriteHealthBar[fase3_boss[3]], LG.getWidth() - 276, 5)
+        end
+        
         -- Renderiza a arma que está sendo usada
-        playerClass.weaponInUse()
+        playerClass.weaponInUse(fase, bow)        
 
         if showFPS then
             LG.print("FPS: " .. tostring(love.timer.getFPS( )), LG.getWidth() - 70, LG.getHeight() - 20)
@@ -430,10 +460,7 @@ function love.update(dt)
         RenderMap()
     elseif fase > 0 and player.life == 1 then
         restartGame()
-    elseif fase > 0 and player.life > 1 then
-        -- Inicia o cronometro do jogo
-        showTimer = timerClass.gameTimer()
-        
+    elseif fase > 0 and player.life > 1 then   
         -- Velocidade do colisor X e Y
         local vx = 0
         local vy = 0
@@ -444,10 +471,10 @@ function love.update(dt)
         elseif LK.isDown('left') or LK.isDown('a') then
             vx = player.speed * -1
         end
-        
-        if LK.isDown('up') or LK.isDown('w') then
-            vy = player.speed * -5
-        end
+                           
+        if LK.isDown('up') or LK.isDown('w') then 
+            vy = player.speed * -5            
+        end           
 
         if player.x < 3080 then
             cam:lookAt(player.x, player.y - 200)
@@ -522,30 +549,61 @@ function love.update(dt)
             RenderMap()
         end
 
-        -- Controle de disparos
-        controlShots(dt)
+        -- Controle de disparos        
+        controlShots(dt)        
 
         -- Controle de dano no personagem
         if fase == 1 then
             applyDamagePlayer(dt, fase1_enemys)       
             -- Controle de dano nos inimigos
             applyDamageEnemy(dt, fase1_enemys)
-        elseif fase == 2 then
+        elseif fase == 2 then                   
+            -- Control de dano no personagem            
             applyDamagePlayer(dt, fase2_enemys)       
             -- Controle de dano nos inimigos
             applyDamageEnemy(dt, fase2_enemys)
         elseif fase == 3 then
+            -- Reseta o inventario com a flecha
+            playerGuns = {'hand', 'sword', 'bow'}
+            -- Control de dano no personagem       
             applyDamagePlayer(dt, fase3_enemys)       
             -- Controle de dano nos inimigos
             applyDamageEnemy(dt, fase3_enemys)
             -- Controle de dano no boss da fase 3
             applyDamageBoss(dt)
+            -- IA do boss que segue o player para mata-lo
+            bossIA(dt)
         end       
     end
 
     -- Verifica se o player obteve a vitória     
     if player.x > 3600 and fase3_boss[3] == 0 then
         fase = -2
+    end
+
+    -- Controle dos audios de cada fase
+    if fase == 1 then
+        audios.fase1:play()        
+    else 
+        audios.fase1:stop()
+    end
+
+    if fase == 2 then
+        audios.fase2:play()        
+    else 
+        audios.fase2:stop()
+    end
+
+    if fase == 3 then
+        audios.fase3:play()        
+    else 
+        audios.fase3:stop()
+    end
+
+    if fase == 0 or fase == -1 or fase == -2 or fase == -3 then
+        audios.menu:play()
+    else 
+        audios.menu:stop()
     end
 end
 
@@ -630,53 +688,6 @@ function RenderMap()
     end
 end
 
-function controlShots(dt)
-    -- Temporizador dos disparos
-    timeAttack = timeAttack - (1 * dt)
-    if timeAttack < 0 then
-        attackTrue = true
-    end
-    -- Controlar o disparo com o mouse
-    if love.mouse.isDown(1) and attackTrue and player.gun == 'bow' then
-        -- Definir a posição do disparo (meio da caixa)
-        local X = posShot.x + (posShot.larg / 2)
-        local Y = posShot.y + (posShot.alt / 2)  
-        
-        -- Coletar a posição do alvo (mouse)
-        local alvoX, alvoY = love.mouse.getPosition()
-
-        if alvoX > 1200 then
-            alvoX = (alvoX / 2) + player.x
-        else
-            alvoX = alvoX + (player.x / 2)
-        end 
-        
-        -- Alvo do tiro
-        local angle = math.atan2((alvoY - Y), (alvoX - X))
-        
-        -- Criar o novo disparo e incluir na tabela
-        newShot = {x = X, y = Y, ang = angle, img = LG.newImage('Insumos/Objeto/arrow.png')}
-        table.insert(shots, newShot)
-
-        attackTrue = false
-        timeAttack = 1.3
-    end
-        
-    -- Animação dos disparos
-    for i, actual in pairs(shots) do
-        -- Física: Dx = deslocamento na direção X, Dy = deslocamento na direção Y
-        local Dx = veloc * math.cos(actual.ang)
-        local Dy = veloc * math.sin(actual.ang)
-        actual.x = actual.x + (Dx * dt)
-        actual.y = actual.y + (Dy * dt)
-        
-        -- Verificação para a limpeza de disparos que sairem da tela
-        if actual.x > 5000 or actual.y > 2000 or actual.x < 0 or actual.y < 0 then
-            table.remove(shots, i)
-        end
-    end
-end
-
 -- Função que inicia o jogo na fase 1 com todas as variaveis limpas
 function initGame()
     -- Reseta para fase 1
@@ -687,6 +698,9 @@ function initGame()
     player.x = 100
     player.y = 575
     player.gun = 'hand'    
+    bow.amountArrowsFase1 = 4    
+    bow.amountArrowsFase2 = 4    
+    bow.amountArrowsFase3 = 12
     -- Reseta o inimigo
     for i = 1, 12, 4 do
         fase1_enemys[i + 2] = 3        
@@ -715,13 +729,19 @@ function restartGame()
         player.x = 100
         player.y = 575
         player.gun = 'hand'    
+        bow.amountArrowsFase1 = 4    
+        bow.amountArrowsFase2 = 4    
+        bow.amountArrowsFase3 = 12
         -- Reseta o inimigo
         for i = 1, 12, 4 do
             fase1_enemys[i + 2] = 3        
-            fase2_enemys[i + 2] = 3     
+            fase2_enemys[i + 2] = 3    
+            fase3_enemys[i + 2] = 3     
             fase1_enemys[i + 3] = false
-            fase2_enemys[i + 3] = false   
+            fase2_enemys[i + 3] = false                              
+            fase3_enemys[i + 3] = false                              
         end        
+        fase3_boss[3] = 6        
 
         player.collider = world:destroy()
         world = wf.newWorld(0, 9.81 * 4000, true)
@@ -744,27 +764,100 @@ function applyDamagePlayer(dt, faseEnemys)
         if condition1 and condition2 and condition3 then
             if i >= 1 and i <= 2 then                            
                 -- Caso haja colisão, chama função que aplica dano no personagem
-                playerClass.playerDamage(dt, 'enemy')
+                playerClass.playerDamage(dt, 'enemy', audios)
                 faseEnemys[4] = true
             else
                 faseEnemys[4] = false
             end
             if i >= 5 and i <= 6 then                            
                 -- Caso haja colisão, chama função que aplica dano no personagem
-                playerClass.playerDamage(dt, 'enemy')
+                playerClass.playerDamage(dt, 'enemy', audios)
                 faseEnemys[8] = true
             else
                 faseEnemys[8] = false
             end
             if i >= 9 and i <= 10 then                            
                 -- Caso haja colisão, chama função que aplica dano no personagem
-                playerClass.playerDamage(dt, 'enemy')
+                playerClass.playerDamage(dt, 'enemy', audios)
                 faseEnemys[12] = true
             else
                 faseEnemys[12] = false
             end       
         end          
     end    
+end
+
+-- Função de controle de tiro com arco e flecha
+function controlShots(dt)
+    -- Temporizador dos disparos
+    timeAttack = timeAttack - (1 * dt)
+    if timeAttack < 0 then
+        attackTrue = true
+    end
+    -- Controlar o disparo com o mouse
+    if love.mouse.isDown(1) and attackTrue and player.gun == 'bow' then
+        -- Definir a posição do disparo (meio da caixa)
+        local X = posShot.x + (posShot.larg / 2)
+        local Y = posShot.y + (posShot.alt / 2)  
+        
+        -- Coletar a posição do alvo (mouse)
+        local alvoX, alvoY = love.mouse.getPosition()
+
+        if alvoX > 1200 then
+            alvoX = (alvoX / 2) + player.x
+        else
+            alvoX = alvoX + (player.x / 2)
+        end 
+        
+        -- Alvo do tiro
+        local angle = math.atan2((alvoY - Y), (alvoX - X))
+        
+        -- Criar o novo disparo e incluir na tabela
+        newShot = {x = X, y = Y, ang = angle, img = LG.newImage('Insumos/Objeto/arrow.png')}
+                        
+        -- Controle do total de flechas disponiveis em cada fase
+        if fase == 1 and bow.amountArrowsFase1 >= 0 then
+            bow.amountArrowsFase1 = bow.amountArrowsFase1 - 1
+        end
+        if fase == 2 and bow.amountArrowsFase2 >= 0 then
+            bow.amountArrowsFase2 = bow.amountArrowsFase2 - 1   
+        end
+        if fase == 3 and bow.amountArrowsFase3 >= 0 then
+            bow.amountArrowsFase3 = bow.amountArrowsFase3 - 1
+        end
+        
+        -- Dispara apenas se houver flechas disponiveis na fase
+        if fase == 1 and bow.amountArrowsFase1 >= 0 then
+            -- Audio do disparo da flecha
+            audios.bow:play()
+            table.insert(shots, newShot)
+        elseif fase == 2 and bow.amountArrowsFase2 >= 0 then
+            -- Audio do disparo da flecha
+            audios.bow:play()
+            table.insert(shots, newShot)
+        elseif fase == 3 and bow.amountArrowsFase3 >= 0 then
+            -- Audio do disparo da flecha
+            audios.bow:play()
+            table.insert(shots, newShot)
+        end  
+        
+        attackTrue = false
+        timeAttack = 1.3
+    end
+        
+    -- Animação dos disparos
+    for i, actual in pairs(shots) do
+        -- Física: Dx = deslocamento na direção X, Dy = deslocamento na direção Y
+        local Dx = veloc * math.cos(actual.ang)
+        local Dy = veloc * math.sin(actual.ang)
+        actual.x = actual.x + (Dx * dt)
+        actual.y = actual.y + (Dy * dt)
+        
+        -- Verificação para a limpeza de disparos que sairem da tela
+        if actual.x > 5000 or actual.y > 2000 or actual.x < 0 or actual.y < 0 then
+            table.remove(shots, i)
+        end
+    end
 end
 
 -- Aplica dano ao inimigo ao colidir com personagem
@@ -788,6 +881,9 @@ function applyDamageEnemy(dt, faseEnemys)
                             -- Remove o tiro
                             table.remove(shots, i)
 
+                            -- Dispara audio de dano
+                            audios.hit:play()
+                            
                             if c >= 1 and c <= 2 then                            
                                 faseEnemys[3] = faseEnemys[3] - 1                                                
                             elseif c >= 5 and c <= 6 then                            
@@ -803,6 +899,8 @@ function applyDamageEnemy(dt, faseEnemys)
     elseif player.gun == 'sword' then
         for c = 1, 12, 4 do
             if LM.isDown(1) then
+                -- Audio de ataque com a espada
+                audios.sword:play()
                 -- Primeiro valida se o personagem está no mesmo lugar com range de 150 que o inimigo
                 if player.x > faseEnemys[c] - 150 and player.x < faseEnemys[c] + 150 then
                     -- Primeiro valida se o personagem está no mesmo lugar com range de 150 que o inimigo
@@ -819,6 +917,9 @@ function applyDamageEnemy(dt, faseEnemys)
         
                         if attackTrue then
                             if faseEnemys[c + 2] > 0 then                     
+                                -- Dispara audio de dano
+                                audios.hit:play()
+                                
                                 if c >= 1 and c <= 2 then                            
                                     faseEnemys[3] = faseEnemys[3] - 1                                                
                                 elseif c >= 5 and c <= 6 then                            
@@ -848,7 +949,7 @@ function applyDamageBoss(dt)
 
     if condition1 and condition2 and condition3 then           
         -- Caso haja colisão, chama função que aplica dano no personagem
-        playerClass.playerDamage(dt, 'enemy', 'boss')
+        playerClass.playerDamage(dt, 'boss', audios)
                     
         fase3_boss[4] = true
 
@@ -892,6 +993,24 @@ function applyDamageBoss(dt)
 end
 
 -- IA do boss para seguir o personagem 
-function bossIA()
-    -- Aqui vai a IA do boss
+function bossIA(dt)             
+    local condition = player.x > fase3_boss[1] - 200 and player.x < fase3_boss[1] + 200
+
+    if not condition and fase3_boss[3] > 0 then
+        
+        if fase3_boss[5] == 'left' then
+            if fase3_boss[1] <= 1900 or player.x > fase3_boss[1] then 
+                fase3_boss[5] = 'right'
+            end
+            fase3_boss[1] = fase3_boss[1] - 100 * dt  
+        end
+
+        if fase3_boss[5] == 'right' then
+            if fase3_boss[1] >= 3600 or player.x < fase3_boss[1] then
+                fase3_boss[5] = 'left'
+            end
+            fase3_boss[1] = fase3_boss[1] + 100 * dt   
+        end
+
+    end
 end

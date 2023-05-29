@@ -14,7 +14,10 @@ ClassePlayer.new = function(player)
 
     self.player = player   
 
-    self.playerDamage = function(dt, tipo)
+    self.playerDamage = function(dt, tipo, audios)
+        -- Dispara audio de dano
+        audios.hit:play()
+
         -- Adiciona mais delay na perca de vida do personagem quando a luta for com o boss
         if tipo == 'boss' then
             activateMax = 2.5            
@@ -302,11 +305,31 @@ ClassePlayer.new = function(player)
         end
     end
 
-    self.weaponInUse = function()
+    self.weaponInUse = function(fase, bow)
         if player.gun == 'bow' then
-            return LG.draw(LG.newImage('Insumos/Objeto/icon_bow.png'), 290, 7)
+            LG.draw(LG.newImage('Insumos/Objeto/icon_bow.png'), 290, 7)            
+            -- Mostra a quantidade de flechas restantes
+            if fase == 1 then
+                if bow.amountArrowsFase1 >= 0 then
+                    LG.print(bow.amountArrowsFase1 .. 'x', 350, 10)
+                else
+                    LG.print('0x', 350, 10)
+                end
+            elseif fase == 2 then
+                if bow.amountArrowsFase2 >= 0 then
+                    LG.print(bow.amountArrowsFase2 .. 'x', 350, 10)
+                else
+                    LG.print('0x', 350, 10)
+                end
+            elseif fase == 3 then
+                if bow.amountArrowsFase3 >= 0 then
+                    LG.print(bow.amountArrowsFase3 .. 'x', 350, 10)
+                else
+                    LG.print('0x', 350, 10)
+                end
+            end            
         elseif player.gun == 'sword' then
-            return LG.draw(LG.newImage('Insumos/Objeto/icon_sword.png'), 290, 7)
+            LG.draw(LG.newImage('Insumos/Objeto/icon_sword.png'), 290, 7)
         end
     end
     
