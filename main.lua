@@ -419,7 +419,7 @@ function love.draw()
 
     elseif fase == 0 then
         LG.draw(backgroundMenu, (LG.getWidth() / 2) - 960 ,0)
-        LG.draw(LG.newImage('Insumos/Videos/logoDragoesDoSubmundo.png'), (LG.getWidth() / 2) - 360, -100)
+        LG.draw(LG.newImage('Insumos/Logo/logoDragoesDoSubmundo.png'), (LG.getWidth() / 2) - 360, -100)
         suit.draw()
     elseif fase == -1 then
         LG.draw(historyGame, (LG.getWidth() / 2) - 800, 0)       
